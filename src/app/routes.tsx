@@ -35,4 +35,4 @@ export const router = createBrowserRouter([
     ],
   },
   { path: "admin", element: <Admin /> },
-]);
+], { basename: import.meta.env.BASE_URL });

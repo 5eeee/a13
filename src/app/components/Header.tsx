@@ -26,7 +26,7 @@ export function Header() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
-            <img src="/logo.svg" alt="Бюро А13" className="h-10 w-auto" />
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Бюро А13" className="h-10 w-auto" />
           </Link>
 
           <div className="flex items-center gap-3">
