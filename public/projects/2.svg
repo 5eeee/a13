@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" fill="none">
-  <rect width="800" height="600" fill="#F0FDF4"/>
-  <rect x="200" y="100" width="400" height="350" rx="12" fill="#DCFCE7" stroke="#86EFAC" stroke-width="2"/>
-  <rect x="220" y="120" width="170" height="200" rx="4" fill="#BBF7D0"/>
-  <rect x="410" y="120" width="170" height="200" rx="4" fill="#BBF7D0"/>
-  <rect x="220" y="340" width="360" height="90" rx="4" fill="#BBF7D0"/>
-  <text x="400" y="520" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#16A34A">Витражное остекление</text>
-</svg>

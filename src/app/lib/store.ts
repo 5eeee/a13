@@ -62,20 +62,21 @@ const KEYS = {
 /* ---- Defaults ---- */
 
 const B = import.meta.env.BASE_URL;
+const PH = `${B}placeholder.svg`;
 
 export const DEFAULT_PROJECTS: Project[] = [
-  { id: 1, title: "Остекление фасада бизнес-центра", year: "2024", image: `${B}projects/1.svg`, images: [], description: "Стоечно-ригельная система Schuco FWS 60+", content: "", category: "Фасады" },
-  { id: 2, title: "Витражное остекление ЖК", year: "2024", image: `${B}projects/2.svg`, images: [], description: "Панорамные алюминиевые витражи", content: "", category: "Остекление" },
-  { id: 3, title: "Зенитные фонари торгового центра", year: "2023", image: `${B}projects/3.svg`, images: [], description: "Светопрозрачная кровля, зенитные фонари", content: "", category: "Зенитные фонари" },
-  { id: 4, title: "Входная группа офисного здания", year: "2023", image: `${B}projects/4.svg`, images: [], description: "Алюминиевые двери и козырьки", content: "", category: "Входные группы" },
-  { id: 5, title: "Фасад производственного корпуса", year: "2023", image: `${B}projects/5.svg`, images: [], description: "Вентилируемый фасад с утеплением", content: "", category: "Фасады" },
-  { id: 6, title: "Остекление коттеджа", year: "2022", image: `${B}projects/6.svg`, images: [], description: "Панорамные окна и раздвижные системы", content: "", category: "Остекление" },
+  { id: 1, title: "Остекление фасада бизнес-центра", year: "2024", image: PH, images: [], description: "Стоечно-ригельная система Schuco FWS 60+", content: "", category: "Фасады" },
+  { id: 2, title: "Витражное остекление ЖК", year: "2024", image: PH, images: [], description: "Панорамные алюминиевые витражи", content: "", category: "Остекление" },
+  { id: 3, title: "Зенитные фонари торгового центра", year: "2023", image: PH, images: [], description: "Светопрозрачная кровля, зенитные фонари", content: "", category: "Зенитные фонари" },
+  { id: 4, title: "Входная группа офисного здания", year: "2023", image: PH, images: [], description: "Алюминиевые двери и козырьки", content: "", category: "Входные группы" },
+  { id: 5, title: "Фасад производственного корпуса", year: "2023", image: PH, images: [], description: "Вентилируемый фасад с утеплением", content: "", category: "Фасады" },
+  { id: 6, title: "Остекление коттеджа", year: "2022", image: PH, images: [], description: "Панорамные окна и раздвижные системы", content: "", category: "Остекление" },
 ];
 
 export const DEFAULT_BLOG: BlogPost[] = [
-  { id: 1, title: "Тренды фасадного остекления 2024", date: "2024-12-15", excerpt: "Обзор актуальных решений в области светопрозрачных конструкций", content: "Полный текст статьи о трендах фасадного остекления в 2024 году...", image: `${B}blog/1.svg`, images: [] },
-  { id: 2, title: "Новые стандарты энергоэффективности", date: "2024-11-20", excerpt: "Изменения в нормативных требованиях к теплоизоляции фасадов", content: "Подробный обзор новых стандартов энергоэффективности...", image: `${B}blog/2.svg`, images: [] },
-  { id: 3, title: "Проект года: БЦ «Горизонт»", date: "2024-10-05", excerpt: "Завершён один из крупнейших проектов — структурное остекление бизнес-центра", content: "Детальный разбор проекта остекления БЦ Горизонт...", image: `${B}blog/3.svg`, images: [] },
+  { id: 1, title: "Тренды фасадного остекления 2024", date: "2024-12-15", excerpt: "Обзор актуальных решений в области светопрозрачных конструкций", content: "Полный текст статьи о трендах фасадного остекления в 2024 году...", image: PH, images: [] },
+  { id: 2, title: "Новые стандарты энергоэффективности", date: "2024-11-20", excerpt: "Изменения в нормативных требованиях к теплоизоляции фасадов", content: "Подробный обзор новых стандартов энергоэффективности...", image: PH, images: [] },
+  { id: 3, title: "Проект года: БЦ «Горизонт»", date: "2024-10-05", excerpt: "Завершён один из крупнейших проектов — структурное остекление бизнес-центра", content: "Детальный разбор проекта остекления БЦ Горизонт...", image: PH, images: [] },
 ];
 
 export const DEFAULT_STATS: StatItem[] = [
