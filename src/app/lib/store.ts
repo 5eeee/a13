@@ -100,10 +100,10 @@ export const DEFAULT_BLOG: BlogPost[] = [
 ];
 
 export const DEFAULT_STATS: StatItem[] = [
-  { value: 20, suffix: "+", label: "Лет опыта" },
-  { value: 8000, suffix: "", label: "м² мощность/мес" },
-  { value: 150, suffix: "+", label: "Реализованных проектов" },
-  { value: 50, suffix: "+", label: "Инженеров в штате" },
+  { value: 15, suffix: "+", label: "Лет опыта" },
+  { value: 70, suffix: "", label: "Монтажников" },
+  { value: 8, suffix: "", label: "Конструкторов" },
+  { value: 20, suffix: "", label: "Партнёров" },
 ];
 
 export const DEFAULT_REVIEWS: Review[] = [
