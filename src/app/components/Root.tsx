@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { FloatingBar } from "./FloatingBar";
+import { PopupForm } from "./PopupForm";
 import { Toaster } from "sonner";
 import { store } from "../lib/store";
 
@@ -44,6 +45,7 @@ export function Root() {
       <Toaster position="top-center" richColors />
       <Header />
       <FloatingBar />
+      <PopupForm />
       <main className="flex-1">
         <Outlet />
       </main>
