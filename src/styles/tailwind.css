@@ -37,6 +37,18 @@ html::-webkit-scrollbar {
   background: #94a3b8;
 }
 
+/* Marquee animation for partners carousel */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Glass textures for light-transparent construction theme */
 .glass-card {
   background: rgba(255, 255, 255, 0.7);
