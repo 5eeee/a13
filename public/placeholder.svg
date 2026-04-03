@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" fill="none">
+  <rect width="800" height="600" rx="0" fill="#F8FAFC"/>
+  <rect x="40" y="40" width="720" height="520" rx="24" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="2"/>
+  <rect x="320" y="200" width="160" height="160" rx="80" fill="#DBEAFE"/>
+  <path d="M370 260 L400 240 L430 260 L430 300 L370 300 Z" fill="#93C5FD"/>
+  <circle cx="400" cy="255" r="12" fill="#93C5FD"/>
+  <rect x="360" y="310" width="80" height="6" rx="3" fill="#BFDBFE"/>
+  <text x="400" y="420" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="600" fill="#94A3B8" letter-spacing="0.05em">ФОТО БУДЕТ ПОЗЖЕ</text>
+  <text x="400" y="455" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#CBD5E1">Бюро А13</text>
+</svg>
