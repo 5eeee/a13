@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { useState, useMemo, useRef } from "react";
-import { Calculator as CalcIcon, CheckCircle2 } from "lucide-react";
+import { Calculator as CalcIcon, CheckCircle2, Paperclip } from "lucide-react";
 import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
 import { sendToTelegram } from "../lib/telegram";
@@ -62,9 +62,14 @@ export function Calculator() {
   const [openPercent, setOpenPercent] = useState("20");
   const [qty, setQty] = useState("1");
 
-  const [contactForm, setContactForm] = useState({ name: "", phone: "", email: "" });
+  const [contactForm, setContactForm] = useState({ name: "", phone: "", email: "", message: "" });
+  const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+  };
 
   const result = useMemo(() => {
     const w = Math.max(0, parseFloat(width) || 0);
@@ -101,19 +106,30 @@ export function Calculator() {
       `Итого: ${fmt(result.total)} руб`,
     ].join("\n");
 
+    const fileNames = files.map(f => f.name);
+    const fullMessage = [calcText, contactForm.message ? `\nОписание: ${contactForm.message}` : "", fileNames.length ? `\nФайлы: ${fileNames.join(", ")}` : ""].filter(Boolean).join("");
+
     const ok = await sendToTelegram({
       name: contactForm.name,
       phone: contactForm.phone,
       email: contactForm.email,
-      message: calcText,
+      message: fullMessage,
       source: "Калькулятор",
     });
+
+    const fileDataUrls: string[] = [];
+    for (const f of files) {
+      const dataUrl = await new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); });
+      fileDataUrls.push(dataUrl);
+    }
 
     store.addLead({
       name: contactForm.name,
       phone: contactForm.phone,
       email: contactForm.email,
+      message: contactForm.message,
       calculation: calcText,
+      files: fileDataUrls,
       date: new Date().toISOString(),
       source: "Калькулятор",
     });
@@ -276,6 +292,24 @@ export function Calculator() {
                     <input type="text" required placeholder="Ваше имя" value={contactForm.name} onChange={e => setContactForm({ ...contactForm, name: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
                     <PhoneInput required value={contactForm.phone} onChange={v => setContactForm({ ...contactForm, phone: v })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
                     <input type="email" placeholder="Email" value={contactForm.email} onChange={e => setContactForm({ ...contactForm, email: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
+                    <textarea placeholder="Краткое описание заказа" value={contactForm.message} onChange={e => setContactForm({ ...contactForm, message: e.target.value })} rows={3} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all resize-none" />
+                    <div>
+                      <label className="flex items-center gap-2 cursor-pointer text-sm text-blue-700 hover:text-blue-800 transition-colors">
+                        <Paperclip size={16} />
+                        <span>Прикрепить файлы</span>
+                        <input type="file" multiple onChange={handleFiles} className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.dwg,.zip,.rar" />
+                      </label>
+                      {files.length > 0 && (
+                        <ul className="mt-1.5 space-y-1">
+                          {files.map((f, i) => (
+                            <li key={i} className="flex items-center gap-1.5 text-xs text-gray-500">
+                              <span className="truncate max-w-[180px]">{f.name}</span>
+                              <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600">×</button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                     <button type="submit" disabled={sending} className="w-full bg-blue-700 text-white font-medium px-4 py-3 rounded-full text-sm hover:bg-blue-800 transition-colors disabled:opacity-60">
                       {sending ? "Отправка..." : "Заказать расчёт"}
                     </button>

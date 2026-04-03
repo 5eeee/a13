@@ -77,6 +77,11 @@ export function Admin() {
   const [showPass, setShowPass] = useState(false);
 
   const [tab, setTab] = useState<Tab>("projects");
+
+  const switchTab = (t: Tab) => {
+    if (t === "leads") setLeads(store.getLeads());
+    setTab(t);
+  };
   const [projects, setProjects] = useState<Project[]>([]);
   const [blog, setBlog] = useState<BlogPost[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -246,7 +251,7 @@ export function Admin() {
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto">
           {tabs.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${tab === t.key ? "border-blue-700 text-blue-700" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
+            <button key={t.key} onClick={() => switchTab(t.key)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${tab === t.key ? "border-blue-700 text-blue-700" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
               <t.icon size={16} /> {t.label}
             </button>
           ))}
