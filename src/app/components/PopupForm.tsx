@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { sendToTelegram } from "../lib/telegram";
+import { store } from "../lib/store";
 import { PhoneInput } from "./PhoneInput";
 
 export function PopupForm() {
@@ -23,6 +24,16 @@ export function PopupForm() {
     e.preventDefault();
     setSending(true);
     const ok = await sendToTelegram({ ...form, source: "Всплывающая форма" });
+    store.addLead({
+      name: form.name,
+      phone: form.phone,
+      email: form.email || "",
+      message: "",
+      calculation: "",
+      files: [],
+      date: new Date().toISOString(),
+      source: "Всплывающая форма",
+    });
     setSending(false);
     if (ok) {
       setSubmitted(true);

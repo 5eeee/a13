@@ -26,7 +26,9 @@ export interface Lead {
   name: string;
   phone: string;
   email: string;
+  message: string;
   calculation: string;
+  files: string[];
   date: string;
   source: string;
 }

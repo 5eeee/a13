@@ -4,6 +4,7 @@ import { useState, useRef, type FormEvent } from "react";
 import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
 import { sendToTelegram } from "../lib/telegram";
+import { store } from "../lib/store";
 import { PhoneInput } from "../components/PhoneInput";
 import { store } from "../lib/store";
 
@@ -34,6 +35,16 @@ export function Contacts() {
     e.preventDefault();
     setSending(true);
     const ok = await sendToTelegram({ ...form, source: "Страница контактов" });
+    store.addLead({
+      name: form.name,
+      phone: form.phone,
+      email: form.email || "",
+      message: form.message || "",
+      calculation: "",
+      files: [],
+      date: new Date().toISOString(),
+      source: "Страница контактов",
+    });
     setSending(false);
     if (ok) {
       toast.success("Сообщение отправлено! Мы свяжемся с вами в ближайшее время.");
