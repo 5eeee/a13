@@ -214,6 +214,15 @@ export function Calculator() {
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  const clampNum = (val: string, min: number, max: number) => {
+    if (val === "" || val === "-") return val;
+    const n = parseFloat(val);
+    if (isNaN(n)) return String(min);
+    if (n > max) return String(max);
+    if (n < min) return String(min);
+    return val;
+  };
+
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
   };
@@ -314,8 +323,8 @@ export function Calculator() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid lg:grid-cols-3 gap-6 lg:h-[calc(100vh-200px)]">
-          <div className="lg:col-span-2 space-y-6 lg:overflow-y-auto lg:pr-2 custom-scrollbar">
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
             <FadeIn>
               <div className="bg-gray-50/80 border border-gray-200 rounded-2xl p-6">
                 <h3 className="text-gray-900 font-medium mb-4">Тип конструкции</h3>
@@ -333,15 +342,15 @@ export function Calculator() {
                 <div className="grid sm:grid-cols-3 gap-4">
                   <div>
                     <label className="text-gray-400 text-xs block mb-1">Ширина (м)</label>
-                    <input type="number" min="0" max="100000" step="0.1" value={width} onChange={e => setWidth(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                    <input type="number" min="0" max="100000" step="0.1" value={width} onChange={e => setWidth(clampNum(e.target.value, 0, 100000))} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                   <div>
                     <label className="text-gray-400 text-xs block mb-1">Высота (м)</label>
-                    <input type="number" min="0" max="100000" step="0.1" value={height} onChange={e => setHeight(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                    <input type="number" min="0" max="100000" step="0.1" value={height} onChange={e => setHeight(clampNum(e.target.value, 0, 100000))} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                   <div>
                     <label className="text-gray-400 text-xs block mb-1">Количество (шт)</label>
-                    <input type="number" min="1" max="10000" step="1" value={qty} onChange={e => setQty(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                    <input type="number" min="1" max="10000" step="1" value={qty} onChange={e => setQty(clampNum(e.target.value, 1, 10000))} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                 </div>
               </div>
@@ -389,9 +398,9 @@ export function Calculator() {
             </FadeIn>
           </div>
 
-          <div className="lg:col-span-1 lg:overflow-y-auto lg:pr-1 custom-scrollbar">
+          <div className="lg:col-span-1">
             <FadeIn delay={0.1}>
-              <div className="bg-gray-50/80 border border-gray-200 rounded-2xl p-6">
+              <div className="bg-gray-50/80 border border-gray-200 rounded-2xl p-6 sticky top-24">
                 {/* Construction visualization */}
                 <div className="mb-5 pb-5 border-b border-gray-200">
                   <ConstructionPreview typeIdx={constructIdx} w={parseFloat(width) || 0} h={parseFloat(height) || 0} />

@@ -59,8 +59,9 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-white/10 text-center text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} Бюро А13. Все права защищены
+        <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-gray-500 text-sm">
+          <span>&copy; {new Date().getFullYear()} Бюро А13. Все права защищены</span>
+          <Link to="/privacy" className="text-gray-500 hover:text-white transition-colors text-xs">Политика конфиденциальности</Link>
         </div>
       </div>
     </footer>

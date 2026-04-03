@@ -14,6 +14,7 @@ import { Blog } from "./pages/Blog";
 import { BlogDetail } from "./pages/BlogDetail";
 import { Clients } from "./pages/Clients";
 import { Vacancies } from "./pages/Vacancies";
+import { Privacy } from "./pages/Privacy";
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: "contacts", element: <Contacts /> },
       { path: "clients", element: <Clients /> },
       { path: "vacancies", element: <Vacancies /> },
+      { path: "privacy", element: <Privacy /> },
       { path: "*", element: <NotFound /> },
     ],
   },

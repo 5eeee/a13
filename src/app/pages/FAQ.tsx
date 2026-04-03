@@ -55,8 +55,19 @@ const faqs = [
 export function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(f => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": { "@type": "Answer", "text": f.a }
+    }))
+  };
+
   return (
     <div className="bg-white pt-20">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center gap-2 text-sm">
           <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>

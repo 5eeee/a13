@@ -96,9 +96,19 @@ const workflow = [
 
 export function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [galleryIdx, setGalleryIdx] = useState(0);
   const [projects, setProjects] = useState(store.getProjects());
   const stats = store.getStats();
   const reviews = store.getReviews();
+
+  /* Responsive: 1 card on mobile, 2 on sm, 3 on lg */
+  const [galleryVisible, setGalleryVisible] = useState(3);
+  useEffect(() => {
+    const update = () => setGalleryVisible(window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentSlide((s) => (s + 1) % projects.length), 5000);
@@ -279,7 +289,7 @@ export function Home() {
       </section>
 
       {/* === GALLERY PREVIEW === */}
-      <section className="py-16 bg-gray-50/80">
+      <section className="py-16 bg-gray-50/80 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="flex items-end justify-between mb-10">
@@ -287,30 +297,50 @@ export function Home() {
                 <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">Портфолио</p>
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Наши работы</h2>
               </div>
-              <Link to="/gallery" className="hidden sm:inline-flex items-center gap-2 text-blue-700 hover:text-blue-800 text-sm font-medium transition-colors">
-                Все проекты <ArrowRight size={14} />
-              </Link>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setGalleryIdx(i => Math.max(0, i - 1))} disabled={galleryIdx === 0} className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500">
+                  <ChevronLeft size={18} />
+                </button>
+                <button onClick={() => setGalleryIdx(i => Math.min(Math.max(0, projects.length - galleryVisible), i + 1))} disabled={galleryIdx >= projects.length - galleryVisible} className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500">
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
           </FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {projects.slice(0, 6).map((project, idx) => (
-              <ScaleIn key={project.id} delay={idx * 0.06}>
-                <div className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1 refraction">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-gray-100 overflow-hidden">
-                    <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                  </div>
-                  <div className="p-5">
-                    <p className="text-blue-500 text-xs font-medium mb-1">{project.year}</p>
-                    <h3 className="text-gray-900 text-sm font-semibold mb-1 group-hover:text-blue-800 transition-colors">{project.title}</h3>
-                    <p className="text-gray-400 text-xs">{project.description}</p>
-                  </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="flex gap-5"
+            animate={{ x: `-${galleryIdx * (100 / galleryVisible + 1.5)}%` }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            {projects.slice(0, 9).map((project, idx) => (
+              <Link
+                key={project.id}
+                to={`/gallery/${project.id}`}
+                className="group flex-shrink-0 bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1 refraction"
+                style={{ width: `calc(${100 / galleryVisible}% - ${(galleryVisible - 1) * 20 / galleryVisible}px)` }}
+              >
+                <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-gray-100 overflow-hidden">
+                  <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 </div>
-              </ScaleIn>
+                <div className="p-5">
+                  <p className="text-blue-500 text-xs font-medium mb-1">{project.year}</p>
+                  <h3 className="text-gray-900 text-sm font-semibold mb-1 group-hover:text-blue-800 transition-colors">{project.title}</h3>
+                  <p className="text-gray-400 text-xs">{project.description}</p>
+                </div>
+              </Link>
+            ))}
+          </motion.div>
+          {/* Dots */}
+          <div className="flex justify-center gap-1.5 mt-8">
+            {Array.from({ length: Math.max(1, projects.slice(0, 9).length - galleryVisible + 1) }, (_, i) => (
+              <button key={i} onClick={() => setGalleryIdx(i)} className={`h-1.5 rounded-full transition-all duration-300 ${i === galleryIdx ? "w-6 bg-blue-600" : "w-1.5 bg-gray-300 hover:bg-gray-400"}`} />
             ))}
           </div>
           <FadeIn>
-            <div className="mt-12 text-center sm:hidden">
-              <Link to="/gallery" className="inline-flex items-center gap-2 text-blue-700 text-sm font-medium">
+            <div className="mt-8 text-center">
+              <Link to="/gallery" className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-800 text-sm font-medium transition-colors">
                 Все проекты <ArrowRight size={14} />
               </Link>
             </div>
