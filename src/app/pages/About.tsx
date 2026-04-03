@@ -176,23 +176,80 @@ export function About() {
       </section>
 
       {/* Timeline */}
-      <section className="py-14">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 left-[10%] w-64 h-64 bg-blue-100/30 rounded-full blur-[80px]" />
+          <div className="absolute bottom-20 right-[10%] w-48 h-48 bg-blue-200/20 rounded-full blur-[60px]" />
+        </div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <FadeIn>
-            <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">История</p>
-            <h2 className="text-3xl font-bold text-gray-900 mb-10">Наш путь</h2>
+            <div className="text-center mb-14">
+              <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">История</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Наш путь</h2>
+            </div>
           </FadeIn>
-          <div className="relative">
-            <div className="absolute left-[23px] top-2 bottom-2 w-px bg-gray-200" />
+
+          {/* Desktop timeline — horizontal with perspective */}
+          <div className="hidden md:block" style={{ perspective: "1200px" }}>
+            <div className="relative" style={{ transformStyle: "preserve-3d" }}>
+              {/* Connecting line */}
+              <div className="absolute top-[52px] left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
+              <div className="grid grid-cols-5 gap-4">
+                {timeline.map((t, i) => (
+                  <ScaleIn key={i} delay={i * 0.12}>
+                    <div
+                      className="relative group"
+                      style={{ transformStyle: "preserve-3d" }}
+                    >
+                      {/* Dot on line */}
+                      <div className="flex justify-center mb-5">
+                        <div className="relative">
+                          <div className="w-6 h-6 rounded-full bg-blue-600 border-[3px] border-white shadow-lg shadow-blue-500/30 z-10 relative group-hover:scale-125 transition-transform duration-300" />
+                          <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-20" />
+                        </div>
+                      </div>
+                      {/* Card */}
+                      <motion.div
+                        whileHover={{ rotateX: -4, rotateY: i < 2 ? 6 : i > 2 ? -6 : 0, y: -8, scale: 1.03 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="bg-white/80 backdrop-blur-md border border-gray-200/60 rounded-2xl p-5 shadow-lg shadow-blue-900/5 hover:shadow-xl hover:shadow-blue-600/10 transition-shadow duration-500 cursor-default"
+                        style={{ transformStyle: "preserve-3d" }}
+                      >
+                        <div style={{ transform: "translateZ(20px)" }}>
+                          <div className="text-blue-700 font-extrabold text-2xl mb-2">{t.year}</div>
+                          <p className="text-gray-500 text-xs leading-relaxed">{t.text}</p>
+                        </div>
+                        {/* 3D depth layers */}
+                        <div className="absolute inset-0 rounded-2xl border border-blue-200/20" style={{ transform: "translateZ(-10px)" }} />
+                      </motion.div>
+                    </div>
+                  </ScaleIn>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile timeline — vertical with 3D cards */}
+          <div className="md:hidden relative">
+            <div className="absolute left-6 top-0 bottom-0 w-[2px] bg-gradient-to-b from-blue-300 via-blue-400 to-blue-300" />
             {timeline.map((t, i) => (
-              <FadeIn key={i} delay={i * 0.08}>
-                <div className="relative flex gap-6 mb-10 last:mb-0">
-                  <div className="w-12 h-12 bg-blue-50 border-2 border-blue-200 rounded-xl flex items-center justify-center shrink-0 z-10">
-                    <span className="text-blue-700 font-bold text-xs">{t.year}</span>
+              <FadeIn key={i} delay={i * 0.1}>
+                <div className="relative flex gap-5 mb-8 last:mb-0">
+                  {/* Dot */}
+                  <div className="relative shrink-0 mt-1">
+                    <div className="w-[52px] flex justify-center">
+                      <div className="w-5 h-5 rounded-full bg-blue-600 border-[3px] border-white shadow-lg shadow-blue-500/25 z-10 relative" />
+                    </div>
                   </div>
-                  <div className="pt-2.5">
-                    <p className="text-gray-600 text-sm leading-relaxed">{t.text}</p>
-                  </div>
+                  {/* Card */}
+                  <motion.div
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="flex-1 bg-white/80 backdrop-blur-md border border-gray-200/60 rounded-2xl p-5 shadow-md shadow-blue-900/5"
+                  >
+                    <div className="text-blue-700 font-extrabold text-xl mb-1.5">{t.year}</div>
+                    <p className="text-gray-500 text-sm leading-relaxed">{t.text}</p>
+                  </motion.div>
                 </div>
               </FadeIn>
             ))}
