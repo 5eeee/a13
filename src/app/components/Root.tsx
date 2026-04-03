@@ -4,6 +4,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { FloatingBar } from "./FloatingBar";
 import { PopupForm } from "./PopupForm";
+import { CookieConsent } from "./CookieConsent";
 import { Toaster } from "sonner";
 import { store } from "../lib/store";
 
@@ -50,6 +51,7 @@ export function Root() {
         <Outlet />
       </main>
       <Footer />
+      <CookieConsent />
     </div>
   );
 }
