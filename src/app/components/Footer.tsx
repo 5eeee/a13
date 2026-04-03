@@ -18,7 +18,7 @@ export function Footer() {
         <div className="grid md:grid-cols-3 gap-10">
           <div>
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src="/logo.svg" alt="Бюро А13" className="h-10 w-auto brightness-0 invert" />
+              <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Бюро А13" className="h-10 w-auto brightness-0 invert" />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed">
               Проектирование, производство и монтаж светопрозрачных конструкций любой сложности. Собственное производство мощностью до 8 000 м²/мес.
