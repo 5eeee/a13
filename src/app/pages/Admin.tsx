@@ -1,12 +1,12 @@
 import { useState, useEffect, type FormEvent } from "react";
 import {
   Trash2, Plus, Save, LogIn, Image, Settings, BarChart3, FileText,
-  FolderOpen, Shield, Eye, EyeOff, X, Inbox, Download, Upload, Star, MessageSquare,
+  FolderOpen, Shield, Eye, EyeOff, X, Inbox, Download, Upload, Star, MessageSquare, Building2,
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link2, Highlighter, Heading1, Heading2, Undo2, Redo2
 } from "lucide-react";
-import { store, DEFAULT_PROJECTS, DEFAULT_BLOG, DEFAULT_STATS, DEFAULT_SETTINGS, DEFAULT_REVIEWS } from "../lib/store";
-import type { Project, BlogPost, StatItem, SiteSettings, Lead, Review } from "../lib/store";
+import { store, DEFAULT_PROJECTS, DEFAULT_BLOG, DEFAULT_STATS, DEFAULT_SETTINGS, DEFAULT_REVIEWS, DEFAULT_PARTNERS } from "../lib/store";
+import type { Project, BlogPost, StatItem, SiteSettings, Lead, Review, Partner } from "../lib/store";
 import { toast, Toaster } from "sonner";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -17,7 +17,7 @@ import Highlight from "@tiptap/extension-highlight";
 import TiptapImage from "@tiptap/extension-image";
 
 const ADMIN_PASS = "a13admin";
-type Tab = "projects" | "blog" | "reviews" | "leads" | "stats" | "settings";
+type Tab = "projects" | "blog" | "reviews" | "leads" | "stats" | "partners" | "settings";
 
 /* ---- Rich Text Editor Component ---- */
 function RichEditor({ content, onChange }: { content: string; onChange: (html: string) => void }) {
@@ -87,6 +87,7 @@ export function Admin() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<StatItem[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
@@ -98,6 +99,7 @@ export function Admin() {
     setBlog(store.getBlog().map(b => ({ ...b, images: b.images || [], content: b.content || "" })));
     setLeads(store.getLeads());
     setReviews(store.getReviews());
+    setPartners(store.getPartners());
     setStats(store.getStats());
     setSettings(store.getSettings());
   }
@@ -118,6 +120,14 @@ export function Admin() {
   const saveStats = () => { store.setStats(stats); toast.success("Показатели сохранены"); };
   const saveSettings = () => { store.setSettings(settings); toast.success("Настройки сохранены"); };
   const saveReviews = () => { store.setReviews(reviews); toast.success("Отзывы сохранены"); };
+  const savePartners = () => { store.setPartners(partners); toast.success("Партнёры сохранены"); };
+  const addPartner = () => {
+    const maxId = partners.reduce((m, p) => Math.max(m, p.id), 0);
+    setPartners([...partners, { id: maxId + 1, name: "" }]);
+  };
+  const removePartner = (id: number) => setPartners(partners.filter(p => p.id !== id));
+  const updatePartner = (id: number, name: string) => setPartners(partners.map(p => p.id === id ? { ...p, name } : p));
+  const resetPartners = () => { setPartners(DEFAULT_PARTNERS); toast.success("Партнёры сброшены к значениям по умолчанию"); };
 
   const addReview = () => {
     const maxId = reviews.reduce((m, r) => Math.max(m, r.id), 0);
@@ -265,6 +275,7 @@ export function Admin() {
     { key: "reviews", label: "Отзывы", icon: MessageSquare },
     { key: "leads", label: "Заявки", icon: Inbox },
     { key: "stats", label: "Показатели", icon: BarChart3 },
+    { key: "partners", label: "Партнёры", icon: Building2 },
     { key: "settings", label: "Настройки", icon: Settings },
   ];
 
@@ -556,6 +567,36 @@ export function Admin() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {/* PARTNERS */}
+        {tab === "partners" && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Партнёры ({partners.length})</h2>
+              <div className="flex gap-2">
+                <button onClick={resetPartners} className="text-gray-400 hover:text-gray-600 text-xs transition-colors">Сбросить</button>
+                <button onClick={addPartner} className="flex items-center gap-1.5 border border-gray-300 text-gray-500 hover:text-blue-700 hover:border-blue-300 px-3 py-2 rounded-full text-xs transition-colors"><Plus size={14} /> Добавить</button>
+                <button onClick={savePartners} className="flex items-center gap-1.5 bg-blue-700 text-white px-4 py-2 rounded-full text-xs hover:bg-blue-800 transition-colors"><Save size={14} /> Сохранить</button>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {partners.map((p, idx) => (
+                <div key={p.id} className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3">
+                  <span className="text-gray-300 text-xs w-6 text-center">#{idx + 1}</span>
+                  <Building2 size={16} className="text-gray-300" />
+                  <input type="text" value={p.name} onChange={e => updatePartner(p.id, e.target.value)} placeholder="Название компании" className={inp + " flex-1"} />
+                  <button onClick={() => removePartner(p.id)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
+                </div>
+              ))}
+              {partners.length === 0 && (
+                <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
+                  <Building2 size={40} className="text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">Партнёров нет</p>
+                  <p className="text-gray-300 text-xs mt-1">Добавьте компании-партнёры для отображения на главной</p>
+                </div>
+              )}
             </div>
           </div>
         )}

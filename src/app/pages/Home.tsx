@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import {
   ChevronLeft, ChevronRight, ArrowRight, Factory, Users, Clock, Wrench, Shield,
   Building2, Layers, Sun, DoorOpen, Grip, Ruler, Phone, Mail, MapPin,
-  CheckCircle2, TrendingUp, Award, Star, Quote
+  CheckCircle2, TrendingUp, Award, Star, Quote, Calculator, FileSpreadsheet, Ruler as RulerIcon, ClipboardList, HardHat
 } from "lucide-react";
 import { motion, useInView, AnimatePresence } from "motion/react";
 import { store } from "../lib/store";
@@ -82,7 +82,7 @@ const strengths = [
   { icon: Shield, title: "Полный комплекс работ", desc: "От проектирования до монтажа и сдачи объекта" },
 ];
 
-const partners = [
+const partners_static = [
   "Метрогипротранс", "Мосметрострой", "SPEECH", "Level", "MR-Group",
   "Донстрой", "UNK project", "Моспромпроект", "FENSMA", "Институт Стройпроект",
 ];
@@ -100,6 +100,7 @@ export function Home() {
   const [projects, setProjects] = useState(store.getProjects());
   const stats = store.getStats();
   const reviews = store.getReviews();
+  const partners = store.getPartners().map(p => p.name);
 
   /* Responsive: 1 card on mobile, 2 on sm, 3 on lg */
   const [galleryVisible, setGalleryVisible] = useState(3);
@@ -180,7 +181,7 @@ export function Home() {
       {/* === STATS BAR === */}
       <section className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-100 metal-shimmer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200/60">
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-blue-200">
             {stats.map((s, i) => (
               <div key={i} className="py-10 px-6 text-center">
                 <div className="text-3xl sm:text-4xl font-bold text-blue-700 mb-1">
@@ -360,15 +361,15 @@ export function Home() {
           <div className="grid md:grid-cols-2 gap-5">
             {reviews.slice(0, 4).map((r, i) => (
               <ScaleIn key={r.id} delay={i * 0.07}>
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 relative h-full">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 relative h-full flex flex-col">
                   <Quote size={28} className="text-blue-100 absolute top-5 right-5" />
                   <div className="flex items-center gap-1 mb-3">
                     {Array.from({ length: 5 }).map((_, s) => (
                       <Star key={s} size={14} className={s < r.rating ? "text-amber-400 fill-amber-400" : "text-gray-200"} />
                     ))}
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4 italic">«{r.text}»</p>
-                  <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 italic flex-1">«{r.text}»</p>
+                  <div className="flex items-center gap-3 pt-3 border-t border-gray-100 mt-auto">
                     <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm">{r.name.charAt(0)}</div>
                     <div>
                       <p className="text-gray-900 font-medium text-sm">{r.name}</p>
@@ -383,16 +384,29 @@ export function Home() {
       </section>
 
       {/* === PARTNERS === */}
-      <section className="py-10 border-y border-gray-100">
+      <section className="py-14 bg-gray-50/60 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <p className="text-center text-gray-500 text-xs font-semibold tracking-widest uppercase mb-8">Нам доверяют</p>
+            <div className="text-center mb-10">
+              <p className="text-blue-700 text-sm font-medium tracking-widest uppercase mb-2">Нам доверяют</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Наши партнёры и клиенты</h2>
+            </div>
           </FadeIn>
-          <div className="flex flex-wrap justify-center gap-x-10 gap-y-4">
-            {partners.map((p, i) => (
-              <FadeIn key={i} delay={i * 0.03}>
-                <span className="text-gray-500 hover:text-blue-700 text-sm font-semibold transition-colors cursor-default whitespace-nowrap">{p}</span>
-              </FadeIn>
+        </div>
+        {/* Infinitely scrolling marquee */}
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50/60 to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50/60 to-transparent z-10 pointer-events-none" />
+          <div className="flex animate-marquee">
+            {[...partners, ...partners].map((p, i) => (
+              <div key={i} className="flex-shrink-0 mx-4 sm:mx-6">
+                <div className="bg-white border border-gray-200 rounded-2xl px-8 py-5 flex items-center gap-3 hover:shadow-lg hover:shadow-blue-500/5 hover:border-blue-200 transition-all duration-300 cursor-default group min-w-[180px]">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                    <Building2 size={18} className="text-blue-600" />
+                  </div>
+                  <span className="text-gray-700 font-semibold text-sm whitespace-nowrap group-hover:text-blue-800 transition-colors">{p}</span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -403,9 +417,22 @@ export function Home() {
         <div className="absolute inset-0">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-300/10 rounded-full blur-3xl" />
-          {/* Glass panels decorative */}
-          <div className="absolute top-10 right-10 w-40 h-60 border border-white/10 rounded-2xl rotate-12 glass-gradient" />
-          <div className="absolute bottom-10 left-20 w-32 h-48 border border-white/10 rounded-2xl -rotate-6 glass-gradient" />
+          {/* Thematic floating icons */}
+          <div className="absolute top-12 right-12 w-16 h-16 bg-white/5 backdrop-blur-sm rounded-2xl flex items-center justify-center rotate-12 border border-white/10">
+            <Calculator size={24} className="text-white/30" />
+          </div>
+          <div className="absolute bottom-16 left-16 w-14 h-14 bg-white/5 backdrop-blur-sm rounded-2xl flex items-center justify-center -rotate-12 border border-white/10">
+            <Ruler size={22} className="text-white/25" />
+          </div>
+          <div className="absolute top-1/3 right-1/4 w-12 h-12 bg-white/5 backdrop-blur-sm rounded-xl flex items-center justify-center rotate-6 border border-white/10">
+            <FileSpreadsheet size={18} className="text-white/20" />
+          </div>
+          <div className="absolute bottom-1/3 left-1/4 w-14 h-14 bg-white/5 backdrop-blur-sm rounded-2xl flex items-center justify-center -rotate-6 border border-white/10">
+            <ClipboardList size={20} className="text-white/25" />
+          </div>
+          <div className="absolute top-20 left-1/3 w-10 h-10 bg-white/5 backdrop-blur-sm rounded-xl flex items-center justify-center rotate-45 border border-white/10">
+            <HardHat size={16} className="text-white/20" />
+          </div>
         </div>
         <FadeIn>
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

@@ -48,6 +48,11 @@ export interface Review {
   projectId?: number;
 }
 
+export interface Partner {
+  id: number;
+  name: string;
+}
+
 export interface SiteSettings {
   phone: string;
   email: string;
@@ -71,6 +76,7 @@ const KEYS = {
   auth: "a13_auth",
   leads: "a13_leads",
   reviews: "a13_reviews",
+  partners: "a13_partners",
 } as const;
 
 /* ---- Defaults ---- */
@@ -105,6 +111,19 @@ export const DEFAULT_REVIEWS: Review[] = [
   { id: 2, name: "Елена Соколова", company: "Донстрой", text: "Сотрудничаем уже третий год. Профессиональный подход к проектированию, грамотный инжиниринг. Все расчёты точные, сроки соблюдают.", rating: 5, projectId: 2 },
   { id: 3, name: "Алексей Михайлов", company: "Level Group", text: "Заказывали зенитные фонари для ТЦ — сложный проект с нестандартной геометрией. Бюро А13 справились блестяще. Все пожелания учли.", rating: 5, projectId: 3 },
   { id: 4, name: "Ирина Гусева", company: "UNK Project", text: "Качественное остекление фасада, быстрые сроки. Отдельно отмечу грамотную техническую документацию и оперативную коммуникацию.", rating: 4 },
+];
+
+export const DEFAULT_PARTNERS: Partner[] = [
+  { id: 1, name: "Метрогипротранс" },
+  { id: 2, name: "Мосметрострой" },
+  { id: 3, name: "SPEECH" },
+  { id: 4, name: "Level" },
+  { id: 5, name: "MR-Group" },
+  { id: 6, name: "Донстрой" },
+  { id: 7, name: "UNK project" },
+  { id: 8, name: "Моспромпроект" },
+  { id: 9, name: "FENSMA" },
+  { id: 10, name: "Институт Стройпроект" },
 ];
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -165,12 +184,16 @@ export const store = {
   getReviews: (): Review[] => load(KEYS.reviews, DEFAULT_REVIEWS),
   setReviews: (r: Review[]) => save(KEYS.reviews, r),
 
+  getPartners: (): Partner[] => load(KEYS.partners, DEFAULT_PARTNERS),
+  setPartners: (p: Partner[]) => save(KEYS.partners, p),
+
   exportAll: () => JSON.stringify({
     projects: load(KEYS.projects, DEFAULT_PROJECTS),
     blog: load(KEYS.blog, DEFAULT_BLOG),
     stats: load(KEYS.stats, DEFAULT_STATS),
     settings: load(KEYS.settings, DEFAULT_SETTINGS),
     reviews: load(KEYS.reviews, DEFAULT_REVIEWS),
+    partners: load(KEYS.partners, DEFAULT_PARTNERS),
     leads: load<Lead[]>(KEYS.leads, []),
   }),
   importAll: (json: string) => {
@@ -180,6 +203,7 @@ export const store = {
     if (data.stats) save(KEYS.stats, data.stats);
     if (data.settings) save(KEYS.settings, data.settings);
     if (data.reviews) save(KEYS.reviews, data.reviews);
+    if (data.partners) save(KEYS.partners, data.partners);
     if (data.leads) save(KEYS.leads, data.leads);
   },
 };
