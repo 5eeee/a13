@@ -219,8 +219,8 @@ export function Calculator() {
   };
 
   const result = useMemo(() => {
-    const w = Math.max(0, parseFloat(width) || 0);
-    const h = Math.max(0, parseFloat(height) || 0);
+    const w = Math.min(100000, Math.max(0, parseFloat(width) || 0));
+    const h = Math.min(100000, Math.max(0, parseFloat(height) || 0));
     const area = w * h;
     if (area === 0) return null;
     const base = CONSTRUCT_TYPES[constructIdx].base;
@@ -228,7 +228,7 @@ export function Calculator() {
     const glassFactor = GLASS_TYPES[glassIdx].factor;
     const ralFactor = RAL_OPTIONS[ralIdx].factor;
     const openFactor = 1 + (Math.min(100, Math.max(0, parseFloat(openPercent) || 0)) / 100) * 0.4;
-    const q = Math.max(1, parseInt(qty) || 1);
+    const q = Math.min(10000, Math.max(1, parseInt(qty) || 1));
     const pricePerSqm = base * sysFactor * glassFactor * ralFactor * openFactor;
     const total = pricePerSqm * area * q;
     return { area: area * q, pricePerSqm: Math.round(pricePerSqm), total: Math.round(total) };
@@ -314,8 +314,8 @@ export function Calculator() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid lg:grid-cols-3 gap-6 lg:h-[calc(100vh-200px)]">
+          <div className="lg:col-span-2 space-y-6 lg:overflow-y-auto lg:pr-2 custom-scrollbar">
             <FadeIn>
               <div className="bg-gray-50/80 border border-gray-200 rounded-2xl p-6">
                 <h3 className="text-gray-900 font-medium mb-4">Тип конструкции</h3>
@@ -333,15 +333,15 @@ export function Calculator() {
                 <div className="grid sm:grid-cols-3 gap-4">
                   <div>
                     <label className="text-gray-400 text-xs block mb-1">Ширина (м)</label>
-                    <input type="number" min="0" step="0.1" value={width} onChange={e => setWidth(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                    <input type="number" min="0" max="100000" step="0.1" value={width} onChange={e => setWidth(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                   <div>
                     <label className="text-gray-400 text-xs block mb-1">Высота (м)</label>
-                    <input type="number" min="0" step="0.1" value={height} onChange={e => setHeight(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                    <input type="number" min="0" max="100000" step="0.1" value={height} onChange={e => setHeight(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                   <div>
                     <label className="text-gray-400 text-xs block mb-1">Количество (шт)</label>
-                    <input type="number" min="1" step="1" value={qty} onChange={e => setQty(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                    <input type="number" min="1" max="10000" step="1" value={qty} onChange={e => setQty(e.target.value)} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                 </div>
               </div>
@@ -389,9 +389,9 @@ export function Calculator() {
             </FadeIn>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 lg:overflow-y-auto lg:pr-1 custom-scrollbar">
             <FadeIn delay={0.1}>
-              <div className="bg-gray-50/80 border border-gray-200 rounded-2xl p-6 sticky top-24">
+              <div className="bg-gray-50/80 border border-gray-200 rounded-2xl p-6">
                 {/* Construction visualization */}
                 <div className="mb-5 pb-5 border-b border-gray-200">
                   <ConstructionPreview typeIdx={constructIdx} w={parseFloat(width) || 0} h={parseFloat(height) || 0} />

@@ -194,7 +194,7 @@ export function About() {
           <div className="hidden md:block" style={{ perspective: "1200px" }}>
             <div className="relative" style={{ transformStyle: "preserve-3d" }}>
               {/* Connecting line */}
-              <div className="absolute top-[52px] left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
+              <div className="absolute top-[11px] left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
               <div className="grid grid-cols-5 gap-4">
                 {timeline.map((t, i) => (
                   <ScaleIn key={i} delay={i * 0.12}>
