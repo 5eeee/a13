@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Factory, Users, Clock, Wrench, Shield, Award, MapPin, Phone, Mail, ArrowRight, CheckCircle } from "lucide-react";
+import { Factory, Users, Clock, Wrench, Shield, Award, MapPin, Phone, Mail, ArrowRight, CheckCircle, Compass, ClipboardList, Truck } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { motion, useInView, useMotionValue, useSpring } from "motion/react";
 
@@ -49,17 +49,49 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
 const strengths = [
   { icon: Factory, title: "Собственное производство", desc: "Производственный комплекс в г. Фрязино мощностью до 8 000 м\u00B2 в месяц" },
   { icon: Users, title: "Сильный инженерный состав", desc: "Квалифицированные инженеры-проектировщики и конструкторы в штате" },
-  { icon: Clock, title: "Опыт более 20 лет", desc: "Два десятилетия успешной работы на рынке светопрозрачных конструкций" },
+  { icon: Clock, title: "Опыт более 15 лет", desc: "Команда профессионалов с многолетним опытом и десятками объектов" },
   { icon: Wrench, title: "Быстрые сроки", desc: "Оперативное выполнение благодаря собственной производственной базе" },
   { icon: Shield, title: "Полный комплекс работ", desc: "От проектирования и расчётов до монтажа и сдачи объекта" },
   { icon: Award, title: "Гарантия качества", desc: "Контроль на каждом этапе, гарантия на конструкции до 5 лет" },
 ];
 
 const stats = [
-  { value: 20, suffix: "+", label: "Лет на рынке" },
-  { value: 8000, suffix: "", label: "м\u00B2 мощность/мес" },
-  { value: 150, suffix: "+", label: "Объектов сдано" },
-  { value: 50, suffix: "+", label: "Специалистов" },
+  { value: 15, suffix: "+", label: "Лет опыта" },
+  { value: 70, suffix: "", label: "Монтажников" },
+  { value: 8, suffix: "", label: "Конструкторов" },
+  { value: 20, suffix: "", label: "Партнёров по проектированию" },
+];
+
+const designItems = [
+  "Собственное проектное бюро",
+  "Геодезия, в том числе 3Д",
+  "Конструкторская команда — 8 человек",
+  "Партнеры по проектированию — до 20 человек",
+  "Все стадии проектирования ОПР, КМ, КМД, ППР",
+  "Статический расчет фасадных систем и крепежей",
+  "Теплотехнический расчет",
+  "Построение аэродинамической модели и анализ нагрузок",
+  "Подбор материалов в соответствии с расчетом",
+  "Составление монтажных схем и сборочных чертежей",
+  "Надзор за монтажными работами",
+];
+
+const managementItems = [
+  "Собственная структура управления монтажом",
+  "ИТР в реестре НРС",
+  "Прорабы с допусками",
+  "Собственные монтажные ресурсы — до 70 человек",
+  "Комплекс имущества для реализации проектов любой сложности",
+  "Партнеры, проверенные временем",
+  "Отлаженная логистика",
+];
+
+const productionItems = [
+  "Собственные производственные мощности",
+  "Производственные площади сборки конструкций",
+  "Складской комплекс",
+  "Качественный человеческий ресурс",
+  "Поставщики материалов и услуг с безупречной репутацией",
 ];
 
 const products = [
@@ -97,7 +129,7 @@ export function About() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <FadeIn>
           <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">О компании</p>
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 max-w-3xl">Инженерная компания с опытом более 20 лет</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 max-w-3xl">Инжиниринговая компания полного цикла</h1>
         </FadeIn>
       </div>
 
@@ -117,22 +149,19 @@ export function About() {
         </div>
       </div>
 
-      {/* About text + products */}
+      {/* About text */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid lg:grid-cols-2 gap-10">
           <SlideIn direction="left">
             <div className="space-y-5 text-gray-500 leading-relaxed">
               <p className="text-lg text-gray-700">
-                Бюро А13 — инженерная компания, специализирующаяся на проектировании, производстве и монтаже светопрозрачных конструкций любой сложности.
+                <span className="text-blue-700 font-semibold">Бюро А13</span> — инжиниринговая компания полного цикла с опытом работы в области конструирования, производства и монтажа <span className="text-blue-700 font-medium">светопрозрачных конструкций</span> любой сложности.
               </p>
               <p>
-                Потенциал компании позволяет своими силами осуществлять весь комплекс работ — от стадии проектирования до сдачи объекта в эксплуатацию.
+                Специализируется на интересных и значимых проектах в любом регионе. Обладает высокотехнологичным производством и квалифицированным персоналом.
               </p>
               <p>
-                Собственное производство в г. Фрязино (ул. Горького д.10 стр.1) мощностью до 8 000 м2 в месяц обеспечивает контроль качества на каждом этапе и кратчайшие сроки исполнения.
-              </p>
-              <p>
-                Работаем с ведущими профильными системами: Schuco (Германия), Reynaers (Бельгия), Alumil (Греция), Alutech (Беларусь), Vidnal (Россия) и другими.
+                Команда профессионалов с более чем 15-ти летним опытом и десятками объектов за плечами, объединилась для реализации самых смелых проектов.
               </p>
             </div>
           </SlideIn>
@@ -151,6 +180,72 @@ export function About() {
           </SlideIn>
         </div>
       </div>
+
+      {/* Competencies: Проектирование, Управление, Производство */}
+      <section className="py-14 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">Компетенции</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-10">Наши направления</h2>
+          </FadeIn>
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Проектирование */}
+            <ScaleIn delay={0}>
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 h-full">
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                  <Compass size={22} className="text-blue-700" />
+                </div>
+                <h3 className="text-gray-900 font-semibold mb-1">Проектирование</h3>
+                <p className="text-blue-600 text-sm mb-4">Как основа успешной реализации проекта</p>
+                <ul className="space-y-2">
+                  {designItems.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-500">
+                      <CheckCircle size={14} className="text-blue-400 mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </ScaleIn>
+            {/* Управление проектом */}
+            <ScaleIn delay={0.08}>
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 h-full">
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                  <ClipboardList size={22} className="text-blue-700" />
+                </div>
+                <h3 className="text-gray-900 font-semibold mb-1">Управление проектом</h3>
+                <p className="text-blue-600 text-sm mb-4">Опора на системный персонал</p>
+                <ul className="space-y-2">
+                  {managementItems.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-500">
+                      <CheckCircle size={14} className="text-blue-400 mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </ScaleIn>
+            {/* Производственный комплекс */}
+            <ScaleIn delay={0.16}>
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 h-full">
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                  <Factory size={22} className="text-blue-700" />
+                </div>
+                <h3 className="text-gray-900 font-semibold mb-1">Производственный комплекс</h3>
+                <p className="text-blue-600 text-sm mb-4">Надежность и качество</p>
+                <ul className="space-y-2">
+                  {productionItems.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-500">
+                      <CheckCircle size={14} className="text-blue-400 mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </ScaleIn>
+          </div>
+        </div>
+      </section>
 
       {/* Strengths */}
       <section className="py-14 bg-gray-50/80">
@@ -264,12 +359,11 @@ export function About() {
             <SlideIn direction="left">
               <div>
                 <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">Производство</p>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">Собственный завод</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-6">Собственный производственный комплекс</h2>
                 <div className="space-y-4 text-gray-500 text-sm leading-relaxed">
-                  <p>Производственный комплекс расположен в г. Фрязино, Московская область, ул. Горького д.10 стр.1.</p>
-                  <p>Мощность производства — до 8 000 м2 конструкций в месяц.</p>
-                  <p>Оснащение включает современные обрабатывающие центры, линии порезки и сборки профилей, оборудование для нарезки стекла и сборки стеклопакетов.</p>
-                  <p>Контроль качества на каждом этапе — от входного контроля материалов до финальной проверки готовых изделий.</p>
+                  <p>Собственные производственные мощности обеспечивают полный цикл изготовления светопрозрачных конструкций — от нарезки профилей до сборки готовых изделий.</p>
+                  <p>Производственные площади сборки конструкций, складской комплекс и качественный человеческий ресурс позволяют выполнять заказы любого масштаба.</p>
+                  <p>Работаем только с проверенными поставщиками материалов и услуг с безупречной репутацией.</p>
                 </div>
                 <Link to="/contacts" className="inline-flex items-center gap-2 bg-blue-700 text-white px-6 py-3 rounded-full text-sm font-medium mt-6 hover:bg-blue-800 hover:shadow-lg hover:shadow-blue-700/25 transition-all">
                   Связаться с нами <ArrowRight size={14} />
