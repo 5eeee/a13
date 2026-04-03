@@ -54,68 +54,147 @@ const RAL_OPTIONS = [
 
 /* Construction type visualization SVG */
 function ConstructionPreview({ typeIdx, w, h }: { typeIdx: number; w: number; h: number }) {
-  const ratio = w && h ? Math.min(w / h, 2) : 1;
-  const svgW = 200;
-  const svgH = svgW / Math.max(ratio, 0.5);
-  const clampH = Math.min(svgH, 220);
   const labels = ["Стоечно-ригельный", "Структурный", "Полуструктурный", "Окна тёплые", "Окна холодные", "Входная группа", "Зенитный фонарь", "Вентфасад", "Противопожарные"];
+  const area = w && h ? w * h : 0;
+
+  /* Fixed SVG canvas — proportions come from viewBox, not dynamic calc */
+  const vbW = 240;
+  const vbH = 200;
+  /* Inner frame with margins for dimension labels */
+  const margin = { top: 12, right: 12, bottom: 28, left: 36 };
+  const fW = vbW - margin.left - margin.right;
+  const fH = vbH - margin.top - margin.bottom;
+  /* Aspect-aware inner rect */
+  const ratio = w && h ? w / h : 1;
+  let rW: number, rH: number;
+  if (ratio >= fW / fH) {
+    rW = fW;
+    rH = fW / ratio;
+  } else {
+    rH = fH;
+    rW = fH * ratio;
+  }
+  const rX = margin.left + (fW - rW) / 2;
+  const rY = margin.top + (fH - rH) / 2;
+  const gap = 3;
+
+  const renderInner = () => {
+    const ix = rX + gap;
+    const iy = rY + gap;
+    const iw = rW - gap * 2;
+    const ih = rH - gap * 2;
+
+    if (typeIdx <= 2 || typeIdx === 8) {
+      /* Facade types — grid */
+      const cols = 3, rows = 2;
+      const cellGap = 2;
+      const cw = (iw - cellGap * (cols - 1)) / cols;
+      const ch = (ih - cellGap * (rows - 1)) / rows;
+      return (
+        <>
+          {Array.from({ length: cols }, (_, c) =>
+            Array.from({ length: rows }, (_, r) => (
+              <rect key={`${c}-${r}`} x={ix + c * (cw + cellGap)} y={iy + r * (ch + cellGap)} width={cw} height={ch} rx="1.5" fill={typeIdx === 8 ? "#fef3c7" : "#dbeafe"} stroke={typeIdx === 2 ? "#3b82f6" : "#93c5fd"} strokeWidth={typeIdx === 1 ? 0.5 : 1} />
+            ))
+          )}
+          {typeIdx === 0 && (
+            <>
+              <line x1={ix + cw} y1={rY} x2={ix + cw} y2={rY + rH} stroke="#64748b" strokeWidth="2" />
+              <line x1={ix + cw * 2 + cellGap} y1={rY} x2={ix + cw * 2 + cellGap} y2={rY + rH} stroke="#64748b" strokeWidth="2" />
+              <line x1={rX} y1={iy + ch} x2={rX + rW} y2={iy + ch} stroke="#64748b" strokeWidth="2" />
+            </>
+          )}
+        </>
+      );
+    }
+
+    if (typeIdx <= 4) {
+      /* Windows */
+      return (
+        <>
+          <rect x={ix} y={iy} width={iw} height={ih} rx="1.5" fill="#dbeafe" stroke="#93c5fd" strokeWidth="1" />
+          <line x1={ix + iw / 2} y1={iy} x2={ix + iw / 2} y2={iy + ih} stroke="#64748b" strokeWidth="1.5" />
+          {typeIdx === 3 && <rect x={ix + 2} y={iy + 2} width={iw / 2 - 4} height={ih - 4} rx="1" fill="none" stroke="#3b82f6" strokeWidth="0.8" strokeDasharray="3 2" />}
+        </>
+      );
+    }
+
+    if (typeIdx === 5) {
+      /* Entrance group */
+      const topH = ih * 0.3;
+      const doorW = iw * 0.28;
+      const doorGap = iw * 0.08;
+      return (
+        <>
+          <rect x={ix} y={iy} width={iw} height={topH} rx="1.5" fill="#dbeafe" stroke="#93c5fd" strokeWidth="1" />
+          <rect x={ix + iw / 2 - doorW - doorGap / 2} y={iy + topH + 3} width={doorW} height={ih - topH - 3} rx="1.5" fill="#dbeafe" stroke="#64748b" strokeWidth="1.5" />
+          <rect x={ix + iw / 2 + doorGap / 2} y={iy + topH + 3} width={doorW} height={ih - topH - 3} rx="1.5" fill="#dbeafe" stroke="#64748b" strokeWidth="1.5" />
+          <circle cx={ix + iw / 2 - doorGap / 2 - 3} cy={iy + topH + 3 + (ih - topH - 3) / 2} r="2" fill="#64748b" />
+          <circle cx={ix + iw / 2 + doorGap / 2 + 3} cy={iy + topH + 3 + (ih - topH - 3) / 2} r="2" fill="#64748b" />
+        </>
+      );
+    }
+
+    if (typeIdx === 6) {
+      /* Skylight */
+      return (
+        <>
+          <path d={`M ${ix} ${iy + ih} L ${ix + iw / 2} ${iy} L ${ix + iw} ${iy + ih} Z`} fill="#dbeafe" stroke="#93c5fd" strokeWidth="1" />
+          <line x1={ix + iw * 0.25} y1={iy + ih * 0.5} x2={ix + iw * 0.75} y2={iy + ih * 0.5} stroke="#64748b" strokeWidth="1" />
+          <line x1={ix + iw / 2} y1={iy} x2={ix + iw / 2} y2={iy + ih} stroke="#64748b" strokeWidth="1" />
+        </>
+      );
+    }
+
+    /* Ventilated facade */
+    const panelRows = 4;
+    const panelGap = 2;
+    const ph = (ih - panelGap * (panelRows - 1)) / panelRows;
+    return (
+      <>
+        {Array.from({ length: panelRows }, (_, r) => (
+          <rect key={r} x={ix} y={iy + r * (ph + panelGap)} width={iw} height={ph} rx="1.5" fill="#e5e7eb" stroke="#9ca3af" strokeWidth="1" />
+        ))}
+      </>
+    );
+  };
 
   return (
-    <div className="flex flex-col items-center">
-      <svg viewBox={`0 0 ${svgW} ${clampH}`} width="100%" style={{ maxHeight: 180 }} className="drop-shadow-sm">
-        {/* Frame */}
-        <rect x="4" y="4" width={svgW - 8} height={clampH - 8} rx="4" fill="none" stroke="#94a3b8" strokeWidth="3" />
+    <div className="flex flex-col items-center w-full">
+      <svg viewBox={`0 0 ${vbW} ${vbH}`} className="w-full" style={{ maxHeight: 220 }} preserveAspectRatio="xMidYMid meet">
+        {/* Outer frame */}
+        <rect x={rX} y={rY} width={rW} height={rH} rx="3" fill="#f8fafc" stroke="#94a3b8" strokeWidth="2.5" />
+        {/* Inner construction */}
+        {renderInner()}
 
-        {/* Glass panes grid */}
-        {typeIdx <= 2 || typeIdx === 8 ? (
-          /* Facade types — grid pattern */
+        {/* Width dimension — top */}
+        {w > 0 && (
           <>
-            {[1, 2, 3].map(col => (
-              [1, 2].map(row => (
-                <rect key={`${col}-${row}`} x={8 + (col - 1) * ((svgW - 16) / 3)} y={8 + (row - 1) * ((clampH - 16) / 2)} width={(svgW - 22) / 3} height={(clampH - 22) / 2} rx="2" fill={typeIdx === 8 ? "#fef3c7" : "#dbeafe"} stroke={typeIdx === 2 ? "#3b82f6" : "#93c5fd"} strokeWidth={typeIdx === 1 ? 0.5 : 1.5} />
-              ))
-            ))}
-            {typeIdx === 0 && (
-              <>
-                <line x1={svgW / 3} y1="4" x2={svgW / 3} y2={clampH - 4} stroke="#64748b" strokeWidth="2.5" />
-                <line x1={svgW * 2 / 3} y1="4" x2={svgW * 2 / 3} y2={clampH - 4} stroke="#64748b" strokeWidth="2.5" />
-                <line x1="4" y1={clampH / 2} x2={svgW - 4} y2={clampH / 2} stroke="#64748b" strokeWidth="2.5" />
-              </>
-            )}
-          </>
-        ) : typeIdx <= 4 ? (
-          /* Window types */
-          <>
-            <rect x="12" y="12" width={svgW - 24} height={clampH - 24} rx="2" fill="#dbeafe" stroke="#93c5fd" strokeWidth="1.5" />
-            <line x1={svgW / 2} y1="12" x2={svgW / 2} y2={clampH - 12} stroke="#64748b" strokeWidth="2" />
-            {typeIdx === 3 && <rect x="14" y="14" width={(svgW - 28) / 2} height={clampH - 28} rx="1" fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" />}
-          </>
-        ) : typeIdx === 5 ? (
-          /* Entrance group */
-          <>
-            <rect x="12" y="12" width={svgW - 24} height={clampH * 0.35} rx="2" fill="#dbeafe" stroke="#93c5fd" strokeWidth="1.5" />
-            <rect x={svgW * 0.2} y={clampH * 0.38 + 12} width={svgW * 0.25} height={clampH * 0.55} rx="2" fill="#dbeafe" stroke="#64748b" strokeWidth="2" />
-            <rect x={svgW * 0.55} y={clampH * 0.38 + 12} width={svgW * 0.25} height={clampH * 0.55} rx="2" fill="#dbeafe" stroke="#64748b" strokeWidth="2" />
-            <circle cx={svgW * 0.43} cy={clampH * 0.65 + 12} r="3" fill="#64748b" />
-            <circle cx={svgW * 0.57} cy={clampH * 0.65 + 12} r="3" fill="#64748b" />
-          </>
-        ) : typeIdx === 6 ? (
-          /* Skylight */
-          <>
-            <path d={`M ${svgW * 0.1} ${clampH - 12} L ${svgW / 2} 16 L ${svgW * 0.9} ${clampH - 12} Z`} fill="#dbeafe" stroke="#93c5fd" strokeWidth="1.5" />
-            <line x1={svgW * 0.3} y1={clampH * 0.5} x2={svgW * 0.7} y2={clampH * 0.5} stroke="#64748b" strokeWidth="1.5" />
-            <line x1={svgW / 2} y1="16" x2={svgW / 2} y2={clampH - 12} stroke="#64748b" strokeWidth="1.5" />
-          </>
-        ) : (
-          /* Ventilated facade */
-          <>
-            {[0, 1, 2, 3].map(row => (
-              <rect key={row} x="12" y={12 + row * ((clampH - 24) / 4)} width={svgW - 24} height={(clampH - 32) / 4} rx="2" fill="#e5e7eb" stroke="#9ca3af" strokeWidth="1.5" />
-            ))}
+            <line x1={rX} y1={rY - 6} x2={rX + rW} y2={rY - 6} stroke="#3b82f6" strokeWidth="0.8" markerStart="url(#arrowL)" markerEnd="url(#arrowR)" />
+            <text x={rX + rW / 2} y={rY - 9} textAnchor="middle" fill="#3b82f6" fontSize="9" fontWeight="600">{w} м</text>
           </>
         )}
+        {/* Height dimension — left */}
+        {h > 0 && (
+          <>
+            <line x1={rX - 6} y1={rY} x2={rX - 6} y2={rY + rH} stroke="#3b82f6" strokeWidth="0.8" markerStart="url(#arrowU)" markerEnd="url(#arrowD)" />
+            <text x={rX - 10} y={rY + rH / 2} textAnchor="middle" fill="#3b82f6" fontSize="9" fontWeight="600" transform={`rotate(-90, ${rX - 10}, ${rY + rH / 2})`}>{h} м</text>
+          </>
+        )}
+        {/* Area label — center */}
+        {area > 0 && (
+          <text x={rX + rW / 2} y={rY + rH + 16} textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="500">S = {area.toFixed(1)} м²</text>
+        )}
+
+        {/* Arrow markers */}
+        <defs>
+          <marker id="arrowR" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="none" stroke="#3b82f6" strokeWidth="0.8" /></marker>
+          <marker id="arrowL" markerWidth="5" markerHeight="5" refX="1" refY="2.5" orient="auto"><path d="M5,0 L0,2.5 L5,5" fill="none" stroke="#3b82f6" strokeWidth="0.8" /></marker>
+          <marker id="arrowD" markerWidth="5" markerHeight="5" refX="2.5" refY="4" orient="auto"><path d="M0,0 L2.5,5 L5,0" fill="none" stroke="#3b82f6" strokeWidth="0.8" /></marker>
+          <marker id="arrowU" markerWidth="5" markerHeight="5" refX="2.5" refY="1" orient="auto"><path d="M0,5 L2.5,0 L5,5" fill="none" stroke="#3b82f6" strokeWidth="0.8" /></marker>
+        </defs>
       </svg>
-      <p className="text-gray-400 text-[11px] mt-2 text-center">{labels[typeIdx]}{w && h ? ` \u2022 ${w}\u00D7${h} \u043C` : ""}</p>
+      <p className="text-gray-500 text-xs font-medium mt-2 text-center">{labels[typeIdx]}</p>
     </div>
   );
 }
@@ -353,7 +432,7 @@ export function Calculator() {
                         <span className="text-blue-700 font-bold text-2xl">{fmt(result.total)} &#8381;</span>
                       </div>
                     </div>
-                    <p className="text-gray-300 text-xs leading-relaxed mt-4">* Предварительный расчёт. Точная стоимость определяется после выезда замерщика и подготовки проектной документации.</p>
+
                   </div>
                 ) : (
                   <p className="text-gray-400 text-sm">Укажите размеры для расчёта</p>
