@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" fill="none">
+  <rect width="800" height="600" fill="#EFF6FF"/>
+  <rect x="100" y="150" width="600" height="300" rx="16" fill="#DBEAFE"/>
+  <circle cx="250" cy="280" r="60" fill="#93C5FD"/>
+  <rect x="350" y="220" width="300" height="20" rx="4" fill="#93C5FD"/>
+  <rect x="350" y="260" width="250" height="16" rx="4" fill="#BFDBFE"/>
+  <rect x="350" y="290" width="280" height="16" rx="4" fill="#BFDBFE"/>
+  <rect x="350" y="320" width="200" height="16" rx="4" fill="#BFDBFE"/>
+  <text x="400" y="520" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#2563EB">Тренды остекления 2024</text>
+</svg>
