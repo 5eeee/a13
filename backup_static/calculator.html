@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Калькулятор — Бюро А13</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="container topbar-inner"><a class="logo" href="index.html">БЮРО <span>А13</span></a><nav class="nav"><a class="link-underline" href="index.html">Главная</a><a class="link-underline" href="about.html">О компании</a><a class="link-underline" href="services.html">Услуги</a><a class="link-underline" href="projects.html">Проекты</a><a class="link-underline active" href="calculator.html">Калькулятор</a><a class="link-underline" href="contacts.html">Контакты</a><a class="link-underline" href="blog.html">Блог</a><a class="link-underline" href="faq.html">FAQ</a></nav></div></header>
+    <main class="section"><div class="container grid grid-2">
+      <article class="card reveal">
+        <h1 class="section-title">ИИ-калькулятор стоимости</h1>
+        <form id="calc-form" class="form">
+          <select name="type" required>
+            <option value="">Тип конструкции</option>
+            <option value="windows">Окна</option>
+            <option value="facade">Фасады</option>
+            <option value="vitrage">Витражи</option>
+            <option value="portal">Портальные системы</option>
+          </select>
+          <input name="area" type="number" min="1" placeholder="Площадь, м²" required />
+          <select name="material" required>
+            <option value="">Материалы</option>
+            <option value="alu">Алюминий</option>
+            <option value="steel">Сталь</option>
+            <option value="combined">Комбинированные</option>
+            <option value="premium">Премиум-решения</option>
+          </select>
+          <select name="complexity" required>
+            <option value="">Сложность</option>
+            <option value="low">Базовая</option>
+            <option value="medium">Средняя</option>
+            <option value="high">Высокая</option>
+          </select>
+          <button class="btn btn-primary btn-reveal" type="submit">Рассчитать</button>
+        </form>
+        <p id="calc-result" class="section-subtitle" style="margin-top:16px;">Ориентировочная стоимость появится здесь.</p>
+        <p class="note">Расчет предварительный. Точная стоимость определяется после консультации и инженерного обследования.</p>
+      </article>
+      <article class="card glow-card reveal">
+        <h3>Отправить расчет менеджеру</h3>
+        <form class="form">
+          <input type="text" placeholder="Имя" required />
+          <input type="tel" placeholder="Телефон" required />
+          <input type="email" placeholder="Email" required />
+          <textarea rows="4" placeholder="Комментарий и пожелания"></textarea>
+          <button class="btn btn-secondary btn-reveal" type="submit">Отправить заявку</button>
+        </form>
+      </article>
+    </div></main>
+    <footer class="footer"><div class="container">© Бюро А13</div></footer>
+    <script src="assets/app.js"></script>
+  </body>
+</html>
