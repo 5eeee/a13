@@ -39,6 +39,15 @@ export interface StatItem {
   label: string;
 }
 
+export interface Review {
+  id: number;
+  name: string;
+  company: string;
+  text: string;
+  rating: number;
+  projectId?: number;
+}
+
 export interface SiteSettings {
   phone: string;
   email: string;
@@ -50,6 +59,8 @@ export interface SiteSettings {
   telegramBotToken: string;
   telegramChatId: string;
   yandexMetrikaId: string;
+  crmWebhookUrl: string;
+  emailServiceId: string;
 }
 
 const KEYS = {
@@ -59,6 +70,7 @@ const KEYS = {
   settings: "a13_settings",
   auth: "a13_auth",
   leads: "a13_leads",
+  reviews: "a13_reviews",
 } as const;
 
 /* ---- Defaults ---- */
@@ -88,6 +100,13 @@ export const DEFAULT_STATS: StatItem[] = [
   { value: 50, suffix: "+", label: "Инженеров в штате" },
 ];
 
+export const DEFAULT_REVIEWS: Review[] = [
+  { id: 1, name: "Дмитрий Ковалёв", company: "МР-Групп", text: "Отличная работа команды Бюро А13. Фасад бизнес-центра выполнен в срок, качество материалов и монтажа на высшем уровне. Рекомендуем как надёжного подрядчика.", rating: 5, projectId: 1 },
+  { id: 2, name: "Елена Соколова", company: "Донстрой", text: "Сотрудничаем уже третий год. Профессиональный подход к проектированию, грамотный инжиниринг. Все расчёты точные, сроки соблюдают.", rating: 5, projectId: 2 },
+  { id: 3, name: "Алексей Михайлов", company: "Level Group", text: "Заказывали зенитные фонари для ТЦ — сложный проект с нестандартной геометрией. Бюро А13 справились блестяще. Все пожелания учли.", rating: 5, projectId: 3 },
+  { id: 4, name: "Ирина Гусева", company: "UNK Project", text: "Качественное остекление фасада, быстрые сроки. Отдельно отмечу грамотную техническую документацию и оперативную коммуникацию.", rating: 4 },
+];
+
 export const DEFAULT_SETTINGS: SiteSettings = {
   phone: "8 (888) 888-88-88",
   email: "info@a13bureau.ru",
@@ -99,6 +118,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   telegramBotToken: "",
   telegramChatId: "",
   yandexMetrikaId: "",
+  crmWebhookUrl: "",
+  emailServiceId: "",
 };
 
 /* ---- Helpers ---- */
@@ -139,5 +160,26 @@ export const store = {
     const leads = load<Lead[]>(KEYS.leads, []);
     const maxId = leads.reduce((m, l) => Math.max(m, l.id), 0);
     save(KEYS.leads, [...leads, { ...lead, id: maxId + 1 }]);
+  },
+
+  getReviews: (): Review[] => load(KEYS.reviews, DEFAULT_REVIEWS),
+  setReviews: (r: Review[]) => save(KEYS.reviews, r),
+
+  exportAll: () => JSON.stringify({
+    projects: load(KEYS.projects, DEFAULT_PROJECTS),
+    blog: load(KEYS.blog, DEFAULT_BLOG),
+    stats: load(KEYS.stats, DEFAULT_STATS),
+    settings: load(KEYS.settings, DEFAULT_SETTINGS),
+    reviews: load(KEYS.reviews, DEFAULT_REVIEWS),
+    leads: load<Lead[]>(KEYS.leads, []),
+  }),
+  importAll: (json: string) => {
+    const data = JSON.parse(json);
+    if (data.projects) save(KEYS.projects, data.projects);
+    if (data.blog) save(KEYS.blog, data.blog);
+    if (data.stats) save(KEYS.stats, data.stats);
+    if (data.settings) save(KEYS.settings, data.settings);
+    if (data.reviews) save(KEYS.reviews, data.reviews);
+    if (data.leads) save(KEYS.leads, data.leads);
   },
 };

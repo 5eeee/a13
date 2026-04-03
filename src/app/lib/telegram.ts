@@ -50,6 +50,48 @@ export async function sendToTelegram(data: FormData): Promise<boolean> {
   }
 }
 
+/* ---- CRM Webhook integration ---- */
+export async function sendToCRM(data: FormData): Promise<void> {
+  const { crmWebhookUrl } = store.getSettings();
+  if (!crmWebhookUrl) return;
+  try {
+    await fetch(crmWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: data.name,
+        phone: data.phone,
+        email: data.email || "",
+        message: data.message || "",
+        source: data.source,
+        date: new Date().toISOString(),
+      }),
+    });
+  } catch {
+    console.warn("CRM webhook failed");
+  }
+}
+
+/* ---- Email confirmation (via EmailJS or configured service) ---- */
+export async function sendEmailConfirmation(email: string, name: string): Promise<void> {
+  const { emailServiceId } = store.getSettings();
+  if (!emailServiceId || !email) return;
+  try {
+    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: emailServiceId,
+        template_id: "a13_confirmation",
+        user_id: emailServiceId,
+        template_params: { to_email: email, to_name: name, company: "Бюро А13" },
+      }),
+    });
+  } catch {
+    console.warn("Email confirmation failed");
+  }
+}
+
 function escapeMarkdown(str: string): string {
   return str.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
 }

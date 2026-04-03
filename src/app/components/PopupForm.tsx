@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
-import { sendToTelegram } from "../lib/telegram";
+import { sendToTelegram, sendToCRM, sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
 import { PhoneInput } from "./PhoneInput";
 
@@ -24,6 +24,8 @@ export function PopupForm() {
     e.preventDefault();
     setSending(true);
     const ok = await sendToTelegram({ ...form, source: "Всплывающая форма" });
+    sendToCRM({ ...form, source: "Всплывающая форма" });
+    sendEmailConfirmation(form.email || "", form.name);
     store.addLead({
       name: form.name,
       phone: form.phone,
