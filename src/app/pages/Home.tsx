@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import {
   ChevronLeft, ChevronRight, ArrowRight, Factory, Users, Clock, Wrench, Shield,
   Building2, Layers, Sun, DoorOpen, Grip, Ruler, Phone, Mail, MapPin,
-  CheckCircle2, TrendingUp, Award, Star
+  CheckCircle2, TrendingUp, Award, Star, Quote
 } from "lucide-react";
 import { motion, useInView, AnimatePresence } from "motion/react";
 import { store } from "../lib/store";
@@ -98,6 +98,7 @@ export function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [projects, setProjects] = useState(store.getProjects());
   const stats = store.getStats();
+  const reviews = store.getReviews();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentSlide((s) => (s + 1) % projects.length), 5000);
@@ -167,9 +168,9 @@ export function Home() {
       </section>
 
       {/* === STATS BAR === */}
-      <section className="bg-gray-50 border-b border-gray-100">
+      <section className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-100 metal-shimmer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200">
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200/60">
             {stats.map((s, i) => (
               <div key={i} className="py-10 px-6 text-center">
                 <div className="text-3xl sm:text-4xl font-bold text-blue-700 mb-1">
@@ -199,7 +200,7 @@ export function Home() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {specializations.map((item, i) => (
               <ScaleIn key={i} delay={i * 0.05}>
-                <Link to={item.link} className="group relative bg-white hover:bg-blue-50/50 border border-gray-200 rounded-2xl p-6 transition-all duration-300 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 block">
+                <Link to={item.link} className="group relative bg-white/80 backdrop-blur-sm hover:bg-blue-50/70 border border-gray-200/80 rounded-2xl p-6 transition-all duration-300 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 block overflow-hidden refraction">
                   <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
                     <item.icon size={22} className="text-blue-700" />
                   </div>
@@ -294,7 +295,7 @@ export function Home() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {projects.slice(0, 6).map((project, idx) => (
               <ScaleIn key={project.id} delay={idx * 0.06}>
-                <div className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1">
+                <div className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1 refraction">
                   <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-gray-100 overflow-hidden">
                     <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
@@ -317,6 +318,40 @@ export function Home() {
         </div>
       </section>
 
+      {/* === REVIEWS === */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <div className="text-center mb-10">
+              <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">Отзывы</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Что говорят наши клиенты</h2>
+            </div>
+          </FadeIn>
+          <div className="grid md:grid-cols-2 gap-5">
+            {reviews.slice(0, 4).map((r, i) => (
+              <ScaleIn key={r.id} delay={i * 0.07}>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 relative h-full">
+                  <Quote size={28} className="text-blue-100 absolute top-5 right-5" />
+                  <div className="flex items-center gap-1 mb-3">
+                    {Array.from({ length: 5 }).map((_, s) => (
+                      <Star key={s} size={14} className={s < r.rating ? "text-amber-400 fill-amber-400" : "text-gray-200"} />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 italic">«{r.text}»</p>
+                  <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                    <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm">{r.name.charAt(0)}</div>
+                    <div>
+                      <p className="text-gray-900 font-medium text-sm">{r.name}</p>
+                      <p className="text-gray-400 text-xs">{r.company}</p>
+                    </div>
+                  </div>
+                </div>
+              </ScaleIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* === PARTNERS === */}
       <section className="py-10 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -335,9 +370,12 @@ export function Home() {
 
       {/* === CTA === */}
       <section className="py-16 bg-gradient-to-br from-blue-700 via-blue-800 to-blue-950 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-300 rounded-full blur-3xl" />
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-300/10 rounded-full blur-3xl" />
+          {/* Glass panels decorative */}
+          <div className="absolute top-10 right-10 w-40 h-60 border border-white/10 rounded-2xl rotate-12 glass-gradient" />
+          <div className="absolute bottom-10 left-20 w-32 h-48 border border-white/10 rounded-2xl -rotate-6 glass-gradient" />
         </div>
         <FadeIn>
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

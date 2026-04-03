@@ -1,12 +1,12 @@
 import { useState, useEffect, type FormEvent } from "react";
 import {
   Trash2, Plus, Save, LogIn, Image, Settings, BarChart3, FileText,
-  FolderOpen, Shield, Eye, EyeOff, X, Inbox,
+  FolderOpen, Shield, Eye, EyeOff, X, Inbox, Download, Upload, Star, MessageSquare,
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link2, Highlighter, Heading1, Heading2, Undo2, Redo2
 } from "lucide-react";
-import { store, DEFAULT_PROJECTS, DEFAULT_BLOG, DEFAULT_STATS, DEFAULT_SETTINGS } from "../lib/store";
-import type { Project, BlogPost, StatItem, SiteSettings, Lead } from "../lib/store";
+import { store, DEFAULT_PROJECTS, DEFAULT_BLOG, DEFAULT_STATS, DEFAULT_SETTINGS, DEFAULT_REVIEWS } from "../lib/store";
+import type { Project, BlogPost, StatItem, SiteSettings, Lead, Review } from "../lib/store";
 import { toast, Toaster } from "sonner";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -17,7 +17,7 @@ import Highlight from "@tiptap/extension-highlight";
 import TiptapImage from "@tiptap/extension-image";
 
 const ADMIN_PASS = "a13admin";
-type Tab = "projects" | "blog" | "leads" | "stats" | "settings";
+type Tab = "projects" | "blog" | "reviews" | "leads" | "stats" | "settings";
 
 /* ---- Rich Text Editor Component ---- */
 function RichEditor({ content, onChange }: { content: string; onChange: (html: string) => void }) {
@@ -85,6 +85,7 @@ export function Admin() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [blog, setBlog] = useState<BlogPost[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<StatItem[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
 
@@ -96,6 +97,7 @@ export function Admin() {
     setProjects(store.getProjects().map(p => ({ ...p, images: p.images || [], content: p.content || "" })));
     setBlog(store.getBlog().map(b => ({ ...b, images: b.images || [], content: b.content || "" })));
     setLeads(store.getLeads());
+    setReviews(store.getReviews());
     setStats(store.getStats());
     setSettings(store.getSettings());
   }
@@ -115,6 +117,35 @@ export function Admin() {
   const saveBlog = () => { store.setBlog(blog); toast.success("Блог сохранён"); };
   const saveStats = () => { store.setStats(stats); toast.success("Показатели сохранены"); };
   const saveSettings = () => { store.setSettings(settings); toast.success("Настройки сохранены"); };
+  const saveReviews = () => { store.setReviews(reviews); toast.success("Отзывы сохранены"); };
+
+  const addReview = () => {
+    const maxId = reviews.reduce((m, r) => Math.max(m, r.id), 0);
+    setReviews([...reviews, { id: maxId + 1, name: "", company: "", text: "", rating: 5 }]);
+  };
+  const removeReview = (id: number) => setReviews(reviews.filter(r => r.id !== id));
+  const updateReview = (id: number, field: keyof Review, value: unknown) => {
+    setReviews(reviews.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  const handleExport = () => {
+    const blob = new Blob([store.exportAll()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `a13_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    toast.success("Копия данных скачана");
+  };
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try { store.importAll(reader.result as string); loadAll(); toast.success("Данные восстановлены"); }
+      catch { toast.error("Ошибка импорта"); }
+    };
+    reader.readAsText(file);
+  };
 
   const addProject = () => {
     const maxId = projects.reduce((m, p) => Math.max(m, p.id), 0);
@@ -231,6 +262,7 @@ export function Admin() {
   const tabs: { key: Tab; label: string; icon: typeof FolderOpen }[] = [
     { key: "projects", label: "Проекты", icon: FolderOpen },
     { key: "blog", label: "Новости", icon: FileText },
+    { key: "reviews", label: "Отзывы", icon: MessageSquare },
     { key: "leads", label: "Заявки", icon: Inbox },
     { key: "stats", label: "Показатели", icon: BarChart3 },
     { key: "settings", label: "Настройки", icon: Settings },
@@ -429,6 +461,44 @@ export function Admin() {
             </div>
           </div>
         )}
+        {/* REVIEWS */}
+        {tab === "reviews" && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Отзывы клиентов ({reviews.length})</h2>
+              <div className="flex gap-2">
+                <button onClick={addReview} className="flex items-center gap-1.5 border border-gray-300 text-gray-500 hover:text-blue-700 hover:border-blue-300 px-3 py-2 rounded-full text-xs transition-colors"><Plus size={14} /> Добавить</button>
+                <button onClick={saveReviews} className="flex items-center gap-1.5 bg-blue-700 text-white px-4 py-2 rounded-full text-xs hover:bg-blue-800 transition-colors"><Save size={14} /> Сохранить</button>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {reviews.map((r, idx) => (
+                <div key={r.id} className="bg-white border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-gray-400 text-xs">#{idx + 1}</span>
+                    <button onClick={() => removeReview(r.id)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-3 mb-3">
+                    <div><label className={lbl}>Имя</label><input type="text" value={r.name} onChange={e => updateReview(r.id, "name", e.target.value)} className={inp} /></div>
+                    <div><label className={lbl}>Компания</label><input type="text" value={r.company} onChange={e => updateReview(r.id, "company", e.target.value)} className={inp} /></div>
+                    <div>
+                      <label className={lbl}>Рейтинг</label>
+                      <div className="flex items-center gap-1 mt-1">
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <button key={s} type="button" onClick={() => updateReview(r.id, "rating", s)} className="p-0.5">
+                            <Star size={18} className={s <= r.rating ? "text-amber-400 fill-amber-400" : "text-gray-300"} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mb-3"><label className={lbl}>Текст отзыва</label><textarea value={r.text} onChange={e => updateReview(r.id, "text", e.target.value)} rows={3} className={inp + " resize-none"} /></div>
+                  <div><label className={lbl}>Связанный проект (ID, необязательно)</label><input type="number" value={r.projectId || ""} onChange={e => updateReview(r.id, "projectId", parseInt(e.target.value) || undefined)} placeholder="Оставьте пустым" className={inp + " max-w-xs"} /></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {/* LEADS */}
         {tab === "leads" && (
           <div>
@@ -526,11 +596,30 @@ export function Admin() {
                 <h3 className="text-gray-900 font-semibold text-sm mb-4">Аналитика</h3>
                 <div><label className={lbl}>ID Яндекс.Метрики</label><input type="text" value={settings.yandexMetrikaId} onChange={e => setSettings({ ...settings, yandexMetrikaId: e.target.value })} placeholder="12345678" className={inp + " max-w-xs"} /></div>
               </div>
+              <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                <h3 className="text-gray-900 font-semibold text-sm mb-4">CRM интеграция</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div><label className={lbl}>Webhook URL (отправка заявок)</label><input type="text" value={settings.crmWebhookUrl || ""} onChange={e => setSettings({ ...settings, crmWebhookUrl: e.target.value })} placeholder="https://your-crm.com/api/webhook" className={inp} /></div>
+                  <div><label className={lbl}>EmailJS Service ID</label><input type="text" value={settings.emailServiceId || ""} onChange={e => setSettings({ ...settings, emailServiceId: e.target.value })} placeholder="service_xxxxx" className={inp} /></div>
+                </div>
+                <p className="text-gray-400 text-xs mt-2">Webhook: заявки отправляются POST-запросом в формате JSON. EmailJS: для автоматического подтверждения на email клиента.</p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                <h3 className="text-gray-900 font-semibold text-sm mb-4">Резервное копирование данных</h3>
+                <p className="text-gray-400 text-xs mb-4">Все данные хранятся в localStorage браузера. Рекомендуется периодически сохранять резервную копию.</p>
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={handleExport} className="flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-full text-xs hover:bg-green-700 transition-colors"><Download size={14} /> Скачать копию</button>
+                  <label className="flex items-center gap-1.5 bg-orange-500 text-white px-4 py-2 rounded-full text-xs hover:bg-orange-600 transition-colors cursor-pointer">
+                    <Upload size={14} /> Восстановить из копии
+                    <input type="file" accept=".json" className="hidden" onChange={handleImport} />
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
-      <p className="text-center text-gray-300 text-xs py-6">Данные сохраняются в localStorage браузера</p>
+      <p className="text-center text-gray-300 text-xs py-6">Данные хранятся в localStorage — не забывайте делать резервные копии</p>
     </div>
   );
 }

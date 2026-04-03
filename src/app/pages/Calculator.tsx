@@ -1,9 +1,9 @@
 import { Link } from "react-router";
 import { useState, useMemo, useRef } from "react";
-import { Calculator as CalcIcon, CheckCircle2, Paperclip } from "lucide-react";
+import { Calculator as CalcIcon, CheckCircle2, Paperclip, Info } from "lucide-react";
 import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
-import { sendToTelegram } from "../lib/telegram";
+import { sendToTelegram, sendToCRM, sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
 import { PhoneInput } from "../components/PhoneInput";
 
@@ -51,6 +51,74 @@ const RAL_OPTIONS = [
   { label: "Нестандартный RAL", factor: 1.12 },
   { label: "Цвет под дерево (ламинация)", factor: 1.2 },
 ];
+
+/* Construction type visualization SVG */
+function ConstructionPreview({ typeIdx, w, h }: { typeIdx: number; w: number; h: number }) {
+  const ratio = w && h ? Math.min(w / h, 2) : 1;
+  const svgW = 200;
+  const svgH = svgW / Math.max(ratio, 0.5);
+  const clampH = Math.min(svgH, 220);
+  const labels = ["Стоечно-ригельный", "Структурный", "Полуструктурный", "Окна тёплые", "Окна холодные", "Входная группа", "Зенитный фонарь", "Вентфасад", "Противопожарные"];
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg viewBox={`0 0 ${svgW} ${clampH}`} width="100%" style={{ maxHeight: 180 }} className="drop-shadow-sm">
+        {/* Frame */}
+        <rect x="4" y="4" width={svgW - 8} height={clampH - 8} rx="4" fill="none" stroke="#94a3b8" strokeWidth="3" />
+
+        {/* Glass panes grid */}
+        {typeIdx <= 2 || typeIdx === 8 ? (
+          /* Facade types — grid pattern */
+          <>
+            {[1, 2, 3].map(col => (
+              [1, 2].map(row => (
+                <rect key={`${col}-${row}`} x={8 + (col - 1) * ((svgW - 16) / 3)} y={8 + (row - 1) * ((clampH - 16) / 2)} width={(svgW - 22) / 3} height={(clampH - 22) / 2} rx="2" fill={typeIdx === 8 ? "#fef3c7" : "#dbeafe"} stroke={typeIdx === 2 ? "#3b82f6" : "#93c5fd"} strokeWidth={typeIdx === 1 ? 0.5 : 1.5} />
+              ))
+            ))}
+            {typeIdx === 0 && (
+              <>
+                <line x1={svgW / 3} y1="4" x2={svgW / 3} y2={clampH - 4} stroke="#64748b" strokeWidth="2.5" />
+                <line x1={svgW * 2 / 3} y1="4" x2={svgW * 2 / 3} y2={clampH - 4} stroke="#64748b" strokeWidth="2.5" />
+                <line x1="4" y1={clampH / 2} x2={svgW - 4} y2={clampH / 2} stroke="#64748b" strokeWidth="2.5" />
+              </>
+            )}
+          </>
+        ) : typeIdx <= 4 ? (
+          /* Window types */
+          <>
+            <rect x="12" y="12" width={svgW - 24} height={clampH - 24} rx="2" fill="#dbeafe" stroke="#93c5fd" strokeWidth="1.5" />
+            <line x1={svgW / 2} y1="12" x2={svgW / 2} y2={clampH - 12} stroke="#64748b" strokeWidth="2" />
+            {typeIdx === 3 && <rect x="14" y="14" width={(svgW - 28) / 2} height={clampH - 28} rx="1" fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" />}
+          </>
+        ) : typeIdx === 5 ? (
+          /* Entrance group */
+          <>
+            <rect x="12" y="12" width={svgW - 24} height={clampH * 0.35} rx="2" fill="#dbeafe" stroke="#93c5fd" strokeWidth="1.5" />
+            <rect x={svgW * 0.2} y={clampH * 0.38 + 12} width={svgW * 0.25} height={clampH * 0.55} rx="2" fill="#dbeafe" stroke="#64748b" strokeWidth="2" />
+            <rect x={svgW * 0.55} y={clampH * 0.38 + 12} width={svgW * 0.25} height={clampH * 0.55} rx="2" fill="#dbeafe" stroke="#64748b" strokeWidth="2" />
+            <circle cx={svgW * 0.43} cy={clampH * 0.65 + 12} r="3" fill="#64748b" />
+            <circle cx={svgW * 0.57} cy={clampH * 0.65 + 12} r="3" fill="#64748b" />
+          </>
+        ) : typeIdx === 6 ? (
+          /* Skylight */
+          <>
+            <path d={`M ${svgW * 0.1} ${clampH - 12} L ${svgW / 2} 16 L ${svgW * 0.9} ${clampH - 12} Z`} fill="#dbeafe" stroke="#93c5fd" strokeWidth="1.5" />
+            <line x1={svgW * 0.3} y1={clampH * 0.5} x2={svgW * 0.7} y2={clampH * 0.5} stroke="#64748b" strokeWidth="1.5" />
+            <line x1={svgW / 2} y1="16" x2={svgW / 2} y2={clampH - 12} stroke="#64748b" strokeWidth="1.5" />
+          </>
+        ) : (
+          /* Ventilated facade */
+          <>
+            {[0, 1, 2, 3].map(row => (
+              <rect key={row} x="12" y={12 + row * ((clampH - 24) / 4)} width={svgW - 24} height={(clampH - 32) / 4} rx="2" fill="#e5e7eb" stroke="#9ca3af" strokeWidth="1.5" />
+            ))}
+          </>
+        )}
+      </svg>
+      <p className="text-gray-400 text-[11px] mt-2 text-center">{labels[typeIdx]}{w && h ? ` \u2022 ${w}\u00D7${h} \u043C` : ""}</p>
+    </div>
+  );
+}
 
 export function Calculator() {
   const [width, setWidth] = useState("3");
@@ -116,6 +184,8 @@ export function Calculator() {
       message: fullMessage,
       source: "Калькулятор",
     });
+    sendToCRM({ name: contactForm.name, phone: contactForm.phone, email: contactForm.email, message: fullMessage, source: "Калькулятор" });
+    sendEmailConfirmation(contactForm.email, contactForm.name);
 
     const fileDataUrls: string[] = [];
     for (const f of files) {
@@ -243,6 +313,11 @@ export function Calculator() {
           <div className="lg:col-span-1">
             <FadeIn delay={0.1}>
               <div className="bg-gray-50/80 border border-gray-200 rounded-2xl p-6 sticky top-24">
+                {/* Construction visualization */}
+                <div className="mb-5 pb-5 border-b border-gray-200">
+                  <ConstructionPreview typeIdx={constructIdx} w={parseFloat(width) || 0} h={parseFloat(height) || 0} />
+                </div>
+
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                     <CalcIcon size={20} className="text-blue-700" />
@@ -283,6 +358,17 @@ export function Calculator() {
                 ) : (
                   <p className="text-gray-400 text-sm">Укажите размеры для расчёта</p>
                 )}
+
+                {/* Disclaimer block */}
+                <div className="mt-5 pt-4 border-t border-gray-200">
+                  <div className="flex items-start gap-2.5 bg-amber-50/80 border border-amber-200/60 rounded-xl p-3.5">
+                    <Info size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                    <div className="text-[11px] text-amber-700/80 leading-relaxed">
+                      <p className="font-medium text-amber-800 mb-1">Важно</p>
+                      <p>Расчёт носит ориентировочный характер. Окончательная стоимость может измениться в зависимости от особенностей объекта, логистики и объёма работ. Для получения точной сметы свяжитесь с нашим менеджером — выезд замерщика бесплатно.</p>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Inline contact form */}
                 {result && !submitted && (

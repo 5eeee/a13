@@ -3,7 +3,7 @@ import { Phone, Mail, MapPin, Factory, Clock, Send } from "lucide-react";
 import { useState, useRef, type FormEvent } from "react";
 import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
-import { sendToTelegram } from "../lib/telegram";
+import { sendToTelegram, sendToCRM, sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
 import { PhoneInput } from "../components/PhoneInput";
 import { store } from "../lib/store";
@@ -35,6 +35,8 @@ export function Contacts() {
     e.preventDefault();
     setSending(true);
     const ok = await sendToTelegram({ ...form, source: "Страница контактов" });
+    sendToCRM({ ...form, source: "Страница контактов" });
+    sendEmailConfirmation(form.email || "", form.name);
     store.addLead({
       name: form.name,
       phone: form.phone,
