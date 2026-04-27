@@ -74,6 +74,9 @@ export function BlogDetail() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                     className="max-w-full max-h-[70vh] object-contain"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                     onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 </AnimatePresence>
@@ -107,7 +110,15 @@ export function BlogDetail() {
                   onClick={() => setCurrentImage(idx)}
                   className={`w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-colors ${idx === currentImage ? "border-blue-700" : "border-transparent hover:border-gray-300"}`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-contain" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  <img
+                    src={img}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
+                    onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
                 </button>
               ))}
             </div>
@@ -163,6 +174,8 @@ export function BlogDetail() {
               src={allImages[currentImage]}
               alt={post.title}
               className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg"
+              decoding="async"
+              fetchPriority="high"
               onClick={e => e.stopPropagation()}
             />
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 text-sm">

@@ -10,6 +10,7 @@
     "setup": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup-and-run.ps1 -InstallOnly",
     "go": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup-and-run.ps1",
     "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/clean-artifacts.ps1",
+    "optimize:images": "node scripts/optimize-public-images.mjs",
     "pack:friend": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pack-friend.ps1",
     "pack:friend:zip": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pack-friend.ps1 -Zip",
     "dev:server": "npm run dev --prefix server",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5"
   },
