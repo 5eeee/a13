@@ -82,10 +82,11 @@ export function Header() {
             </Link>
             <button
               onClick={() => { setMenuOpen(!menuOpen); setContactOpen(false); }}
-              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors rounded-xl hover:bg-gray-100"
-              aria-label="Menu"
+              className="h-10 min-w-10 px-2.5 inline-flex items-center justify-center gap-1 rounded-xl border border-blue-200/80 bg-gradient-to-b from-blue-50/95 to-white/90 text-blue-800 shadow-sm shadow-blue-900/5 ring-1 ring-blue-100/60 hover:border-blue-300 hover:from-blue-100/90 hover:to-white hover:text-blue-900 transition-colors"
+              aria-label="Открыть меню"
             >
-              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+              {menuOpen ? <X size={22} strokeWidth={2.25} aria-hidden /> : <Menu size={22} strokeWidth={2.25} aria-hidden />}
+              <span className="hidden min-[400px]:inline text-[11px] font-semibold tracking-wide text-blue-800/95">Меню</span>
             </button>
           </div>
         </div>

@@ -549,11 +549,11 @@ export function AboutPageSections({
             <div className="hidden md:block" style={{ perspective: "1200px" }}>
               <div className="relative" style={{ transformStyle: "preserve-3d" }}>
                 <div className="absolute top-[11px] left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
-                <div className="grid grid-cols-5 gap-4">
+                <div className="grid grid-cols-5 gap-4 items-stretch">
                   {s.timeline.items.map((t, i) => (
-                    <BoxScale key={i} delay={i * 0.12} noMotion={noMotion}>
-                      <div className="relative group" style={{ transformStyle: "preserve-3d" }}>
-                        <div className="flex justify-center mb-5">
+                    <BoxScale key={i} delay={i * 0.12} noMotion={noMotion} className="h-full min-h-0">
+                      <div className="relative group h-full min-h-0 flex flex-col" style={{ transformStyle: "preserve-3d" }}>
+                        <div className="flex justify-center mb-5 shrink-0">
                           <div className="relative">
                             <div className="w-6 h-6 rounded-full bg-blue-600 border-[3px] border-white shadow-lg shadow-blue-500/30 z-10 relative group-hover:scale-125 transition-transform duration-300" />
                             <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-20" />
@@ -562,10 +562,10 @@ export function AboutPageSections({
                         <motion.div
                           whileHover={{ rotateX: -4, rotateY: i < 2 ? 6 : i > 2 ? -6 : 0, y: -8, scale: 1.03 }}
                           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                          className="bg-white/80 backdrop-blur-md border border-gray-200/60 rounded-2xl p-5 shadow-lg shadow-blue-900/5 hover:shadow-xl hover:shadow-blue-600/10 transition-shadow duration-500 cursor-default"
+                          className="flex-1 min-h-0 flex flex-col bg-white/80 backdrop-blur-md border border-gray-200/60 rounded-2xl p-5 shadow-lg shadow-blue-900/5 hover:shadow-xl hover:shadow-blue-600/10 transition-shadow duration-500 cursor-default"
                           style={{ transformStyle: "preserve-3d" }}
                         >
-                          <div style={{ transform: "translateZ(20px)" }}>
+                          <div className="flex min-h-0 flex-1 flex-col" style={{ transform: "translateZ(20px)" }}>
                             {p ? (
                               <>
                                 <input
@@ -574,7 +574,7 @@ export function AboutPageSections({
                                   onChange={(e) => p(["timeline", "items", i, "year"], e.target.value)}
                                   onClick={(e) => e.stopPropagation()}
                                   onMouseDown={(e) => e.stopPropagation()}
-                                  className={`text-blue-700 font-extrabold text-2xl mb-2 w-full block ${ghostIn}`}
+                                  className={`text-blue-700 font-extrabold text-2xl mb-2 w-full shrink-0 block ${ghostIn}`}
                                 />
                                 <AutoGhost
                                   value={t.text}
@@ -584,8 +584,8 @@ export function AboutPageSections({
                               </>
                             ) : (
                               <>
-                                <div className="text-blue-700 font-extrabold text-2xl mb-2">{t.year}</div>
-                                <p className="text-gray-500 text-xs leading-relaxed">{t.text}</p>
+                                <div className="text-blue-700 font-extrabold text-2xl mb-2 shrink-0">{t.year}</div>
+                                <p className="text-gray-500 text-xs leading-relaxed flex-1 min-h-0">{t.text}</p>
                               </>
                             )}
                           </div>
