@@ -3,9 +3,11 @@ import { useState, useMemo, useRef } from "react";
 import { Calculator as CalcIcon, CheckCircle2, Paperclip, Info } from "lucide-react";
 import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
-import { sendToTelegram, sendToCRM, sendEmailConfirmation } from "../lib/telegram";
+import { sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
 import { PhoneInput } from "../components/PhoneInput";
+import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -57,7 +59,7 @@ function ConstructionPreview({ typeIdx, w, h }: { typeIdx: number; w: number; h:
   const labels = ["Стоечно-ригельный", "Структурный", "Полуструктурный", "Окна тёплые", "Окна холодные", "Входная группа", "Зенитный фонарь", "Вентфасад", "Противопожарные"];
   const area = w && h ? w * h : 0;
 
-  /* Fixed SVG canvas — proportions come from viewBox, not dynamic calc */
+  /* Fixed SVG canvas - proportions come from viewBox, not dynamic calc */
   const vbW = 240;
   const vbH = 200;
   /* Inner frame with margins for dimension labels */
@@ -85,7 +87,7 @@ function ConstructionPreview({ typeIdx, w, h }: { typeIdx: number; w: number; h:
     const ih = rH - gap * 2;
 
     if (typeIdx <= 2 || typeIdx === 8) {
-      /* Facade types — grid */
+      /* Facade types - grid */
       const cols = 3, rows = 2;
       const cellGap = 2;
       const cw = (iw - cellGap * (cols - 1)) / cols;
@@ -167,21 +169,21 @@ function ConstructionPreview({ typeIdx, w, h }: { typeIdx: number; w: number; h:
         {/* Inner construction */}
         {renderInner()}
 
-        {/* Width dimension — top */}
+        {/* Width dimension - top */}
         {w > 0 && (
           <>
             <line x1={rX} y1={rY - 6} x2={rX + rW} y2={rY - 6} stroke="#3b82f6" strokeWidth="0.8" markerStart="url(#arrowL)" markerEnd="url(#arrowR)" />
             <text x={rX + rW / 2} y={rY - 9} textAnchor="middle" fill="#3b82f6" fontSize="9" fontWeight="600">{w} м</text>
           </>
         )}
-        {/* Height dimension — left */}
+        {/* Height dimension - left */}
         {h > 0 && (
           <>
             <line x1={rX - 6} y1={rY} x2={rX - 6} y2={rY + rH} stroke="#3b82f6" strokeWidth="0.8" markerStart="url(#arrowU)" markerEnd="url(#arrowD)" />
             <text x={rX - 10} y={rY + rH / 2} textAnchor="middle" fill="#3b82f6" fontSize="9" fontWeight="600" transform={`rotate(-90, ${rX - 10}, ${rY + rH / 2})`}>{h} м</text>
           </>
         )}
-        {/* Area label — center */}
+        {/* Area label - center */}
         {area > 0 && (
           <text x={rX + rW / 2} y={rY + rH + 16} textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="500">S = {area.toFixed(1)} м²</text>
         )}
@@ -200,6 +202,7 @@ function ConstructionPreview({ typeIdx, w, h }: { typeIdx: number; w: number; h:
 }
 
 export function Calculator() {
+  useStoreVersion();
   const [width, setWidth] = useState("3");
   const [height, setHeight] = useState("3");
   const [constructIdx, setConstructIdx] = useState(0);
@@ -209,7 +212,7 @@ export function Calculator() {
   const [openPercent, setOpenPercent] = useState("20");
   const [qty, setQty] = useState("1");
 
-  const [contactForm, setContactForm] = useState({ name: "", phone: "", email: "", message: "" });
+  const [contactForm, setContactForm] = useState({ name: "", phone: "", email: "", message: "", region: "", floors: "" });
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -258,22 +261,14 @@ export function Calculator() {
       `Открывание: ${openPercent}%`,
       `Размеры: ${width}x${height} м, ${qty} шт`,
       `Площадь: ${result.area.toFixed(1)} м²`,
-      `Цена/м²: ${fmt(result.pricePerSqm)} руб`,
-      `Итого: ${fmt(result.total)} руб`,
-    ].join("\n");
+      `Ориентир цена/м²: от ${fmt(result.pricePerSqm)} руб`,
+      `Ориентир итого: от ${fmt(result.total)} руб`,
+      contactForm.region ? `Регион: ${contactForm.region}` : "",
+      contactForm.floors ? `Этажность / этаж: ${contactForm.floors}` : "",
+    ].filter(Boolean).join("\n");
 
     const fileNames = files.map(f => f.name);
     const fullMessage = [calcText, contactForm.message ? `\nОписание: ${contactForm.message}` : "", fileNames.length ? `\nФайлы: ${fileNames.join(", ")}` : ""].filter(Boolean).join("");
-
-    const ok = await sendToTelegram({
-      name: contactForm.name,
-      phone: contactForm.phone,
-      email: contactForm.email,
-      message: fullMessage,
-      source: "Калькулятор",
-    });
-    sendToCRM({ name: contactForm.name, phone: contactForm.phone, email: contactForm.email, message: fullMessage, source: "Калькулятор" });
-    sendEmailConfirmation(contactForm.email, contactForm.name);
 
     const fileDataUrls: string[] = [];
     for (const f of files) {
@@ -281,23 +276,26 @@ export function Calculator() {
       fileDataUrls.push(dataUrl);
     }
 
-    store.addLead({
-      name: contactForm.name,
-      phone: contactForm.phone,
-      email: contactForm.email,
-      message: contactForm.message,
-      calculation: calcText,
-      files: fileDataUrls,
-      date: new Date().toISOString(),
-      source: "Калькулятор",
-    });
-
-    setSending(false);
-    if (ok) {
+    try {
+      await store.addLead({
+        name: contactForm.name,
+        phone: contactForm.phone,
+        email: contactForm.email,
+        message: fullMessage,
+        calculation: calcText,
+        files: fileDataUrls,
+        date: new Date().toISOString(),
+        source: "Калькулятор",
+        region: contactForm.region || undefined,
+        floors: contactForm.floors || undefined,
+      });
+      void sendEmailConfirmation(contactForm.email, contactForm.name);
       setSubmitted(true);
       toast.success("Заявка отправлена!");
-    } else {
-      toast.error("Ошибка отправки, попробуйте позже");
+    } catch {
+      toast.error("Заявка не ушла на сервер. Уменьшите вложения или проверьте API.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -307,18 +305,16 @@ export function Calculator() {
   return (
     <div className="bg-white pt-20">
       <Toaster position="top-center" richColors />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600">Калькулятор</span>
-        </div>
-      </div>
+      <PageBreadcrumbs>
+        <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600">Калькулятор</span>
+      </PageBreadcrumbs>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <FadeIn>
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900">Калькулятор</h1>
-          <p className="text-gray-500 text-lg mt-4 max-w-2xl">Предварительный расчёт стоимости алюминиевых конструкций</p>
+          <p className="text-gray-500 text-lg mt-4 max-w-2xl">Ориентировочный расчёт «от» - итоговая стоимость после заявки и замеров</p>
         </FadeIn>
       </div>
 
@@ -433,12 +429,12 @@ export function Calculator() {
                     </div>
                     <div className="border-t border-gray-200 pt-4">
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-400">Цена за м&sup2;</span>
-                        <span className="text-gray-900">{fmt(result.pricePerSqm)} &#8381;</span>
+                        <span className="text-gray-400">Цена за м&sup2;, от</span>
+                        <span className="text-gray-900">от {fmt(result.pricePerSqm)} &#8381;</span>
                       </div>
                       <div className="flex justify-between items-end">
-                        <span className="text-gray-400 text-sm">Итого</span>
-                        <span className="text-blue-700 font-bold text-2xl">{fmt(result.total)} &#8381;</span>
+                        <span className="text-gray-400 text-sm">Итого, от</span>
+                        <span className="text-blue-700 font-bold text-2xl">от {fmt(result.total)} &#8381;</span>
                       </div>
                     </div>
 
@@ -453,7 +449,7 @@ export function Calculator() {
                     <Info size={16} className="text-amber-500 shrink-0 mt-0.5" />
                     <div className="text-[11px] text-amber-700/80 leading-relaxed">
                       <p className="font-medium text-amber-800 mb-1">Важно</p>
-                      <p>Расчёт носит ориентировочный характер. Окончательная стоимость может измениться в зависимости от особенностей объекта, логистики и объёма работ. Для получения точной сметы свяжитесь с нашим менеджером — выезд замерщика бесплатно.</p>
+                      <p>Расчёт носит ориентировочный характер, показана нижняя граница «от» без верхнего предела. Окончательная стоимость - после заявки и замеров. Работаем по всей России; укажите регион и этажность в форме ниже.</p>
                     </div>
                   </div>
                 </div>
@@ -462,9 +458,16 @@ export function Calculator() {
                 {result && !submitted && (
                   <form onSubmit={handleCalcSubmit} className="mt-6 pt-5 border-t border-gray-200 space-y-3">
                     <h4 className="text-gray-900 font-semibold text-sm">Заказать расчёт</h4>
-                    <p className="text-gray-400 text-xs">Оставьте контакты — мы свяжемся с вами</p>
+                    <p className="text-gray-400 text-xs">Оставьте контакты - мы свяжемся с вами</p>
                     <input type="text" required placeholder="Ваше имя" value={contactForm.name} onChange={e => setContactForm({ ...contactForm, name: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
-                    <PhoneInput required value={contactForm.phone} onChange={v => setContactForm({ ...contactForm, phone: v })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
+                    <PhoneInput
+                    required
+                    value={contactForm.phone}
+                    onChange={v => setContactForm({ ...contactForm, phone: v })}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all"
+                  />
+                    <input type="text" placeholder="Регион / город" value={contactForm.region} onChange={e => setContactForm({ ...contactForm, region: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
+                    <input type="text" placeholder="Этаж или этажность объекта" value={contactForm.floors} onChange={e => setContactForm({ ...contactForm, floors: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
                     <input type="email" placeholder="Email" value={contactForm.email} onChange={e => setContactForm({ ...contactForm, email: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
                     <textarea placeholder="Краткое описание заказа" value={contactForm.message} onChange={e => setContactForm({ ...contactForm, message: e.target.value })} rows={3} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all resize-none" />
                     <div>

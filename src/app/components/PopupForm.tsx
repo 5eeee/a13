@@ -2,15 +2,19 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
-import { sendToTelegram, sendToCRM, sendEmailConfirmation } from "../lib/telegram";
+import { sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { useScrollLock } from "../lib/useScrollLock";
 import { PhoneInput } from "./PhoneInput";
 
 export function PopupForm() {
+  useStoreVersion();
   const [isOpen, setIsOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  useScrollLock(isOpen);
 
   useEffect(() => {
     const shown = sessionStorage.getItem("popupShown");
@@ -20,29 +24,37 @@ export function PopupForm() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    const ok = await sendToTelegram({ ...form, source: "Всплывающая форма" });
-    sendToCRM({ ...form, source: "Всплывающая форма" });
-    sendEmailConfirmation(form.email || "", form.name);
-    store.addLead({
-      name: form.name,
-      phone: form.phone,
-      email: form.email || "",
-      message: "",
-      calculation: "",
-      files: [],
-      date: new Date().toISOString(),
-      source: "Всплывающая форма",
-    });
-    setSending(false);
-    if (ok) {
+    try {
+      await store.addLead({
+        name: form.name,
+        phone: form.phone,
+        email: form.email || "",
+        message: "",
+        calculation: "",
+        files: [],
+        date: new Date().toISOString(),
+        source: "Всплывающая форма",
+      });
+      void sendEmailConfirmation(form.email || "", form.name);
       setSubmitted(true);
       toast.success("Заявка отправлена!");
       setTimeout(() => { setIsOpen(false); setSubmitted(false); setForm({ name: "", phone: "", email: "" }); }, 2000);
-    } else {
-      toast.error("Ошибка отправки");
+    } catch {
+      toast.error("Заявка не ушла на сервер. Проверьте API.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -71,7 +83,12 @@ export function PopupForm() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <input type="text" required placeholder="Ваше имя" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-sm transition-all" />
-                  <PhoneInput required value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-sm transition-all" />
+                  <PhoneInput
+                    required
+                    value={form.phone}
+                    onChange={(v) => setForm({ ...form, phone: v })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-sm transition-all"
+                  />
                   <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-sm transition-all" />
                   <button type="submit" disabled={sending} className="w-full bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 transition-colors text-sm disabled:opacity-60">
                     {sending ? "Отправка..." : "Отправить заявку"}

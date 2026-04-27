@@ -1,16 +1,21 @@
-/* ---- Telegram Bot API integration ---- */
-
+/**
+ * Раньше: отправка с браузера (токен светился в сети).
+ * Сейчас: заявки уходят в API → server/src/leadNotify.js (Telegram + почта + CRM).
+ * Функции sendToTelegram / sendToCRM оставлены для отладки, из форм не вызываются.
+ */
 import { store } from "./store";
 
-interface FormData {
+export interface TelegramFormPayload {
   name: string;
   phone: string;
   email?: string;
   message?: string;
   source: string;
+  region?: string;
+  floors?: string;
 }
 
-export async function sendToTelegram(data: FormData): Promise<boolean> {
+export async function sendToTelegram(data: TelegramFormPayload): Promise<boolean> {
   const settings = store.getSettings();
   const { telegramBotToken, telegramChatId } = settings;
 
@@ -26,6 +31,8 @@ export async function sendToTelegram(data: FormData): Promise<boolean> {
     `📞 Телефон: ${escapeMarkdown(data.phone)}`,
     data.email ? `📧 Email: ${escapeMarkdown(data.email)}` : null,
     data.message ? `💬 Сообщение: ${escapeMarkdown(data.message)}` : null,
+    data.region ? `🗺 Регион: ${escapeMarkdown(data.region)}` : null,
+    data.floors ? `🏢 Этаж / этажность: ${escapeMarkdown(data.floors)}` : null,
     ``,
     `📍 Источник: ${escapeMarkdown(data.source)}`,
     `🕐 ${new Date().toLocaleString("ru-RU")}`,
@@ -51,7 +58,7 @@ export async function sendToTelegram(data: FormData): Promise<boolean> {
 }
 
 /* ---- CRM Webhook integration ---- */
-export async function sendToCRM(data: FormData): Promise<void> {
+export async function sendToCRM(data: TelegramFormPayload): Promise<void> {
   const { crmWebhookUrl } = store.getSettings();
   if (!crmWebhookUrl) return;
   try {
@@ -63,6 +70,8 @@ export async function sendToCRM(data: FormData): Promise<void> {
         phone: data.phone,
         email: data.email || "",
         message: data.message || "",
+        region: data.region || "",
+        floors: data.floors || "",
         source: data.source,
         date: new Date().toISOString(),
       }),

@@ -3,10 +3,11 @@ import { Phone, Mail, MapPin, Factory, Clock, Send } from "lucide-react";
 import { useState, useRef, type FormEvent } from "react";
 import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
-import { sendToTelegram, sendToCRM, sendEmailConfirmation } from "../lib/telegram";
+import { sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
 import { PhoneInput } from "../components/PhoneInput";
-import { store } from "../lib/store";
+import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -19,6 +20,7 @@ function FadeIn({ children, className = "", delay = 0 }: { children: React.React
 }
 
 export function Contacts() {
+  useStoreVersion();
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
   const settings = store.getSettings();
@@ -34,39 +36,35 @@ export function Contacts() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSending(true);
-    const ok = await sendToTelegram({ ...form, source: "Страница контактов" });
-    sendToCRM({ ...form, source: "Страница контактов" });
-    sendEmailConfirmation(form.email || "", form.name);
-    store.addLead({
-      name: form.name,
-      phone: form.phone,
-      email: form.email || "",
-      message: form.message || "",
-      calculation: "",
-      files: [],
-      date: new Date().toISOString(),
-      source: "Страница контактов",
-    });
-    setSending(false);
-    if (ok) {
+    try {
+      await store.addLead({
+        name: form.name,
+        phone: form.phone,
+        email: form.email || "",
+        message: form.message || "",
+        calculation: "",
+        files: [],
+        date: new Date().toISOString(),
+        source: "Страница контактов",
+      });
+      void sendEmailConfirmation(form.email || "", form.name);
       toast.success("Сообщение отправлено! Мы свяжемся с вами в ближайшее время.");
       setForm({ name: "", phone: "", email: "", message: "" });
-    } else {
-      toast.error("Ошибка отправки. Попробуйте позже.");
+    } catch {
+      toast.error("Заявка не ушла на сервер. Проверьте API и настройки.");
+    } finally {
+      setSending(false);
     }
   };
 
   return (
     <div className="bg-white pt-20">
       <Toaster position="top-center" richColors />
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600">Контакты</span>
-        </div>
-      </div>
+      <PageBreadcrumbs>
+        <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600">Контакты</span>
+      </PageBreadcrumbs>
 
       {/* Title */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
@@ -113,7 +111,10 @@ export function Contacts() {
                   </div>
                   <div>
                     <label className="text-gray-500 text-xs block mb-1.5">Телефон *</label>
-                    <PhoneInput value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} required
+                    <PhoneInput
+                      value={form.phone}
+                      onChange={v => setForm(f => ({ ...f, phone: v }))}
+                      required
                       className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                 </div>
@@ -137,7 +138,7 @@ export function Contacts() {
         </div>
       </div>
 
-      {/* Map — Офис: Рублевское шоссе д.26 корп.4, Производство: Фрязино, Горького д.10 стр.1 */}
+      {/* Map - Офис: Рублевское шоссе д.26 корп.4, Производство: Фрязино, Горького д.10 стр.1 */}
       <div className="w-full h-[400px] rounded-t-3xl overflow-hidden">
         <iframe
           src="https://yandex.ru/map-widget/v1/?ll=37.4167%2C55.7300&z=10&pt=37.3945%2C55.7264%2Cpm2blm~38.0456%2C55.9608%2Cpm2gnm"

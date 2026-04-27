@@ -1,7 +1,9 @@
 import { Link } from "react-router";
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
-import { store } from "../lib/store";
+import { store, blogPostsForSite } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -14,17 +16,16 @@ function FadeIn({ children, className = "", delay = 0 }: { children: React.React
 }
 
 export function Blog() {
-  const posts = store.getBlog();
+  useStoreVersion();
+  const posts = blogPostsForSite(store.getBlog());
 
   return (
     <div className="bg-white pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600">Новости</span>
-        </div>
-      </div>
+      <PageBreadcrumbs>
+        <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600">Новости</span>
+      </PageBreadcrumbs>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <FadeIn>

@@ -2,7 +2,10 @@ import { Link, useParams } from "react-router";
 import { useState, useRef } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { motion, useInView, AnimatePresence } from "motion/react";
-import { store } from "../lib/store";
+import { store, blogPostsForSite } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { useScrollLock } from "../lib/useScrollLock";
+import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -15,11 +18,12 @@ function FadeIn({ children, className = "", delay = 0 }: { children: React.React
 }
 
 export function BlogDetail() {
+  useStoreVersion();
   const { id } = useParams();
-  const posts = store.getBlog();
-  const post = posts.find(p => p.id === Number(id));
+  const post = blogPostsForSite(store.getBlog()).find(p => p.id === Number(id));
   const [currentImage, setCurrentImage] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  useScrollLock(lightbox);
 
   if (!post) {
     return (
@@ -40,16 +44,13 @@ export function BlogDetail() {
 
   return (
     <div className="bg-white pt-20">
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
-          <span className="text-gray-300">/</span>
-          <Link to="/blog" className="text-gray-400 hover:text-blue-800 transition-colors">Новости</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600">{post.title}</span>
-        </div>
-      </div>
+      <PageBreadcrumbs>
+        <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
+        <span className="text-gray-300">/</span>
+        <Link to="/blog" className="text-gray-400 hover:text-blue-800 transition-colors">Новости</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600 line-clamp-2 sm:line-clamp-none">{post.title}</span>
+      </PageBreadcrumbs>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <FadeIn>

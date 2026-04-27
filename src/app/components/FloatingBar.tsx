@@ -2,16 +2,20 @@ import { useEffect, useState } from "react";
 import { X, MessageSquarePlus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
-import { sendToTelegram, sendToCRM, sendEmailConfirmation } from "../lib/telegram";
+import { sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { useScrollLock } from "../lib/useScrollLock";
 import { PhoneInput } from "./PhoneInput";
 
 export function FloatingBar() {
+  useStoreVersion();
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
+  useScrollLock(open);
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 300);
@@ -19,19 +23,39 @@ export function FloatingBar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    const ok = await sendToTelegram({ ...form, source: "Плавающая кнопка" });
-    sendToCRM({ ...form, source: "Плавающая кнопка" });
-    sendEmailConfirmation(form.email || "", form.name);
-    store.addLead({ name: form.name, phone: form.phone, email: form.email || "", message: form.message, calculation: "", files: [], date: new Date().toISOString(), source: "Плавающая кнопка" });
-    setSending(false);
-    if (ok) { setDone(true); toast.success("Заявка отправлена!"); setTimeout(() => { setOpen(false); setDone(false); setForm({ name: "", phone: "", email: "", message: "" }); }, 2000); }
-    else toast.error("Ошибка отправки");
+    try {
+      await store.addLead({
+        name: form.name,
+        phone: form.phone,
+        email: form.email || "",
+        message: form.message,
+        calculation: "",
+        files: [],
+        date: new Date().toISOString(),
+        source: "Плавающая кнопка",
+      });
+      void sendEmailConfirmation(form.email || "", form.name);
+      setDone(true);
+      toast.success("Заявка отправлена!");
+      setTimeout(() => { setOpen(false); setDone(false); setForm({ name: "", phone: "", email: "", message: "" }); }, 2000);
+    } catch {
+      toast.error("Заявка не отправлена. Проверьте подключение к серверу.");
+    } finally {
+      setSending(false);
+    }
   };
-
-  const B = import.meta.env.BASE_URL;
 
   return (
     <>
@@ -58,19 +82,35 @@ export function FloatingBar() {
       {/* Contact form modal */}
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-4 sm:p-6 bg-black/30 backdrop-blur-sm">
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm"
+          >
             <motion.div
-              initial={{ opacity: 0, y: 60, scale: 0.95 }}
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 60, scale: 0.95 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden"
             >
               {/* Glass header */}
-              <div className="bg-gradient-to-r from-blue-700 to-blue-900 p-6 relative overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-700 to-blue-900 p-6 relative overflow-hidden pr-14">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-                <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors p-1"><X size={20} /></button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="absolute top-3 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+                  aria-label="Закрыть"
+                >
+                  <X size={22} />
+                </button>
                 <h3 className="text-white font-bold text-lg relative z-10">Получите консультацию</h3>
                 <p className="text-blue-200/80 text-sm mt-1 relative z-10">Ответим в течение 15 минут</p>
               </div>
@@ -87,7 +127,12 @@ export function FloatingBar() {
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-3">
                     <input type="text" required placeholder="Ваше имя" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm" />
-                    <PhoneInput required value={form.phone} onChange={v => setForm({ ...form, phone: v })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm" />
+                    <PhoneInput
+                      required
+                      value={form.phone}
+                      onChange={v => setForm({ ...form, phone: v })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm"
+                    />
                     <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm" />
                     <textarea placeholder="Опишите ваш вопрос или задачу..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} rows={3} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm resize-none" />
                     <button type="submit" disabled={sending} className="w-full bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 transition-colors text-sm disabled:opacity-60">
