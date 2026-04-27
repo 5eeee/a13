@@ -724,7 +724,7 @@ export function AboutPageSections({
                         key={i}
                         className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 shadow-sm"
                       >
-                        <img src={url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img src={url} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" fetchPriority="low" />
                       </div>
                     ))}
                   </div>

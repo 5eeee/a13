@@ -27,7 +27,14 @@ type CoverProps = {
 };
 
 /** Обложка проекта или нейтральная заглушка, если нет фото */
-export function ProjectCover({ project, className = "", imgClassName = "", alt, fetchPriority, loading }: CoverProps) {
+export function ProjectCover({
+  project,
+  className = "",
+  imgClassName = "",
+  alt,
+  fetchPriority,
+  loading = "lazy",
+}: CoverProps) {
   const [broken, setBroken] = useState(false);
   const url = projectCoverUrl(project);
   if (!url || broken) {
@@ -38,7 +45,7 @@ export function ProjectCover({ project, className = "", imgClassName = "", alt, 
       src={url}
       alt={alt ?? project.title}
       className={`block max-w-full ${imgClassName}`}
-      {...(fetchPriority ? { fetchpriority: fetchPriority } : {})}
+      {...(fetchPriority ? { fetchPriority } : {})}
       loading={loading}
       decoding="async"
       onError={() => setBroken(true)}

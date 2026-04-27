@@ -81,12 +81,12 @@ export function Header() {
               Оставить заявку
             </Link>
             <button
+              type="button"
               onClick={() => { setMenuOpen(!menuOpen); setContactOpen(false); }}
-              className="h-10 min-w-10 px-2.5 inline-flex items-center justify-center gap-1 rounded-xl border border-blue-200/80 bg-gradient-to-b from-blue-50/95 to-white/90 text-blue-800 shadow-sm shadow-blue-900/5 ring-1 ring-blue-100/60 hover:border-blue-300 hover:from-blue-100/90 hover:to-white hover:text-blue-900 transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
               aria-label="Открыть меню"
             >
-              {menuOpen ? <X size={22} strokeWidth={2.25} aria-hidden /> : <Menu size={22} strokeWidth={2.25} aria-hidden />}
-              <span className="hidden min-[400px]:inline text-[11px] font-semibold tracking-wide text-blue-800/95">Меню</span>
+              {menuOpen ? <X size={22} strokeWidth={1.75} aria-hidden /> : <Menu size={22} strokeWidth={1.75} aria-hidden />}
             </button>
           </div>
         </div>

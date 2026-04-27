@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Дубликат презентации: Calibri, фото public/projects/pptx-*.png, тексты с сайта.
+Дубликат презентации: Calibri, фото public/projects/pptx-*.webp (или .png), тексты с сайта.
 Исходник: c:\\Users\\vladi\\Downloads\\Untitled.pptx
 Результат: c:\\Users\\vladi\\Downloads\\Бюро-А13-презентация-Calibri.pptx
 """
 from __future__ import annotations
 
 import shutil
+from io import BytesIO
 from pathlib import Path
 
 from pptx import Presentation
@@ -168,7 +169,9 @@ img_counter = 0
 
 def png_for_seed(seed: int) -> Path:
     n = (seed % 53) + 1
-    return (IMG_DIR / f"pptx-{n:02d}.png").resolve()
+    webp = IMG_DIR / f"pptx-{n:02d}.webp"
+    png = IMG_DIR / f"pptx-{n:02d}.png"
+    return (webp if webp.is_file() else png).resolve()
 
 
 def next_photo_path() -> Path:
@@ -178,8 +181,24 @@ def next_photo_path() -> Path:
     return p
 
 
-def replace_picture_blob(shape, path: Path) -> None:
+def image_bytes_for_ppt(path: Path) -> bytes:
+    """PowerPoint надёжнее принимает PNG; WebP конвертируем при наличии Pillow."""
     data = path.read_bytes()
+    if path.suffix.lower() != ".webp":
+        return data
+    try:
+        from PIL import Image
+
+        im = Image.open(BytesIO(data)).convert("RGB")
+        buf = BytesIO()
+        im.save(buf, format="PNG", optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return data
+
+
+def replace_picture_blob(shape, path: Path) -> None:
+    data = image_bytes_for_ppt(path)
     blip = shape._element.blipFill.blip
     r_id = blip.get(qn("r:embed"))
     part = shape.part.related_part(r_id)

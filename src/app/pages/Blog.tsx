@@ -43,7 +43,17 @@ export function Blog() {
                 className="text-left w-full group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 block"
               >
                 <div className="h-44 bg-gradient-to-br from-blue-50 to-gray-100 overflow-hidden">
-                  {item.image && <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />}
+                  {item.image && (
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
+                      fetchPriority="low"
+                      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                  )}
                 </div>
                 <div className="p-5">
                   <p className="text-blue-500 text-xs font-medium mb-2">{item.date}</p>

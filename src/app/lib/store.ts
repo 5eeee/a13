@@ -128,7 +128,7 @@ const B = import.meta.env.BASE_URL;
 
 function pptxAsset(index: number): string {
   const n = (index % 53) + 1;
-  return `${B}projects/pptx-${String(n).padStart(2, "0")}.png`;
+  return `${B}projects/pptx-${String(n).padStart(2, "0")}.webp`;
 }
 
 const PROJECT_SEEDS: Array<Pick<Project, "title" | "year" | "description" | "category">> = [

@@ -131,17 +131,22 @@ export function Home() {
   }, [heroProjects.length]);
 
   useEffect(() => {
-    const first = heroProjects[0];
-    const url = first ? projectCoverUrl(first) : null;
-    if (!url || url.startsWith("data:")) return;
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
-    link.href = url;
-    link.fetchPriority = "high";
-    document.head.appendChild(link);
+    if (heroProjects.length === 0) return;
+    const links: HTMLLinkElement[] = [];
+    const preloadCount = Math.min(4, heroProjects.length);
+    for (let i = 0; i < preloadCount; i++) {
+      const url = projectCoverUrl(heroProjects[i]);
+      if (!url || url.startsWith("data:")) continue;
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = url;
+      if (i === 0) link.setAttribute("fetchpriority", "high");
+      document.head.appendChild(link);
+      links.push(link);
+    }
     return () => {
-      document.head.removeChild(link);
+      for (const link of links) link.remove();
     };
   }, [heroProjects]);
 
@@ -214,8 +219,8 @@ export function Home() {
                   project={slide}
                   className="absolute inset-0 w-full h-full min-h-[100vh]"
                   imgClassName="absolute inset-0 w-full h-full object-cover"
-                  fetchPriority={currentSlide === 0 ? "high" : "low"}
-                  loading={currentSlide === 0 ? "eager" : "lazy"}
+                  fetchPriority="high"
+                  loading="eager"
                 />
               </motion.div>
             </AnimatePresence>

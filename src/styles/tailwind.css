@@ -62,6 +62,11 @@ html::-webkit-scrollbar {
   animation: page-loader-slide 1.15s cubic-bezier(0.45, 0, 0.2, 1) infinite;
 }
 
+/* Текстовые статьи: откладываем отрисовку внеэкранных картинок */
+.prose img {
+  content-visibility: auto;
+}
+
 /* Glass textures for light-transparent construction theme */
 .glass-card {
   background: rgba(255, 255, 255, 0.7);
