@@ -21,7 +21,14 @@ function ScaleIn({ children, className = "", delay = 0 }: { children: React.Reac
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, scale: 0.92 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={inView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+      style={{ transformOrigin: "center top" }}
+    >
       {children}
     </motion.div>
   );
@@ -110,7 +117,7 @@ export function Services() {
   const serviceMap = store.getServiceExamples();
 
   return (
-    <div className="bg-white pt-20">
+    <div className="bg-white pt-20 overflow-x-hidden">
       <PageBreadcrumbs>
         <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
         <span className="text-gray-300">/</span>
@@ -129,8 +136,8 @@ export function Services() {
         </FadeIn>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 w-full min-w-0">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 w-full min-w-0">
           {services.map((s, i) => {
             const related = resolveServiceExamples(
               s.id,
@@ -139,23 +146,23 @@ export function Services() {
               serviceMap
             );
             return (
-              <ScaleIn key={s.id} delay={i * 0.06}>
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col">
+              <ScaleIn key={s.id} delay={i * 0.06} className="min-w-0 w-full max-w-full">
+                <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col min-w-0 max-w-full overflow-hidden">
                   {/* SVG Illustration */}
-                  <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-4 mb-4 border border-gray-100">
-                    {s.illustration}
+                  <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-4 mb-4 border border-gray-100 overflow-hidden min-w-0">
+                    <div className="min-w-0 max-w-full [&_svg]:max-w-full">{s.illustration}</div>
                   </div>
 
                   <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
                     <s.icon size={22} className="text-blue-700" />
                   </div>
-                  <h3 className="text-gray-900 font-bold text-lg mb-3 group-hover:text-blue-800 transition-colors">{s.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed mb-5">{s.desc}</p>
-                  <ul className="space-y-2.5 mb-5">
+                  <h3 className="text-gray-900 font-bold text-lg mb-3 group-hover:text-blue-800 transition-colors break-words">{s.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed mb-5 break-words">{s.desc}</p>
+                  <ul className="space-y-2.5 mb-5 min-w-0">
                     {s.items.map((item, j) => (
-                      <li key={j} className="text-gray-400 text-xs flex items-center gap-2.5">
-                        <CheckCircle size={13} className="text-blue-400 shrink-0" />
-                        {item}
+                      <li key={j} className="text-gray-400 text-xs flex items-start gap-2.5 min-w-0">
+                        <CheckCircle size={13} className="text-blue-400 shrink-0 mt-0.5" />
+                        <span className="min-w-0 break-words">{item}</span>
                       </li>
                     ))}
                   </ul>
@@ -180,17 +187,17 @@ export function Services() {
       </div>
 
       {/* Advantages strip */}
-      <section className="py-10 bg-gray-50/80 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 bg-gray-50/80 border-y border-gray-100 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full min-w-0">
           <FadeIn>
             <p className="text-center text-gray-300 text-xs tracking-widest uppercase mb-8">Почему выбирают нас</p>
           </FadeIn>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {advantages.map((a, i) => (
               <FadeIn key={i} delay={i * 0.05}>
-                <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-5 py-4 hover:border-blue-200 transition-colors h-full">
-                  <CheckCircle size={18} className="text-blue-500 shrink-0" />
-                  <span className="text-gray-600 text-sm">{a}</span>
+                <div className="flex items-start gap-3 bg-white border border-gray-200 rounded-xl px-4 sm:px-5 py-4 hover:border-blue-200 transition-colors h-full min-w-0">
+                  <CheckCircle size={18} className="text-blue-500 shrink-0 mt-0.5" />
+                  <span className="text-gray-600 text-sm min-w-0 break-words">{a}</span>
                 </div>
               </FadeIn>
             ))}
