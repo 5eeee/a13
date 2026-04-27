@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
+import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -35,13 +36,11 @@ const partners = [
 export function Clients() {
   return (
     <div className="bg-white pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600">Наши клиенты</span>
-        </div>
-      </div>
+      <PageBreadcrumbs>
+        <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600">Наши клиенты</span>
+      </PageBreadcrumbs>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
         <FadeIn>
@@ -52,7 +51,7 @@ export function Clients() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <FadeIn delay={0.1}>
           <p className="text-gray-500 max-w-3xl">
-            Среди основных заказчиков ООО "Бюро А13" такие организации как:
+            Среди основных заказчиков ООО «Бюро А13» - девелоперы, инфраструктурные и промышленные компании. Профильные системы и стекло (Schüco, Reynaers и др.) перечислены на главной странице в блоке поставщиков.
           </p>
         </FadeIn>
       </div>

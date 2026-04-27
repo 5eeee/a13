@@ -3,6 +3,10 @@ import { ArrowRight, Building2, DoorOpen, Sun, Grip, ShieldCheck, Ruler, CheckCi
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { resolveServiceExamples } from "../lib/serviceExamples";
+import { SITE_SERVICE_DEFS } from "../lib/servicePage";
+import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -25,6 +29,7 @@ function ScaleIn({ children, className = "", delay = 0 }: { children: React.Reac
 
 const services = [
   {
+    id: SITE_SERVICE_DEFS[0].id,
     icon: Building2,
     title: "Светопрозрачные фасады",
     desc: "Проектирование, производство и монтаж стоечно-ригельных, структурных и полуструктурных фасадных систем из алюминиевого профиля.",
@@ -35,6 +40,7 @@ const services = [
     ),
   },
   {
+    id: SITE_SERVICE_DEFS[1].id,
     icon: DoorOpen,
     title: "Алюминиевые окна и двери",
     desc: "Холодные и тёплые оконные и дверные системы из алюминиевого профиля для объектов любого назначения.",
@@ -45,6 +51,7 @@ const services = [
     ),
   },
   {
+    id: SITE_SERVICE_DEFS[2].id,
     icon: Sun,
     title: "Зенитные фонари",
     desc: "Проектирование и монтаж зенитных фонарей и атриумных конструкций для естественного освещения зданий.",
@@ -55,6 +62,7 @@ const services = [
     ),
   },
   {
+    id: SITE_SERVICE_DEFS[3].id,
     icon: Grip,
     title: "Вентилируемые фасады",
     desc: "Навесные вентилируемые фасады с облицовкой алюминиевыми композитными панелями, керамогранитом, натуральным камнем.",
@@ -65,6 +73,7 @@ const services = [
     ),
   },
   {
+    id: SITE_SERVICE_DEFS[4].id,
     icon: ShieldCheck,
     title: "Противопожарные конструкции",
     desc: "Огнестойкие алюминиевые конструкции с пределом огнестойкости EI 60, REI 60 и выше.",
@@ -75,9 +84,10 @@ const services = [
     ),
   },
   {
+    id: SITE_SERVICE_DEFS[5].id,
     icon: Ruler,
     title: "Проектирование и инжиниринг",
-    desc: "Полный комплекс проектных работ — от концепции и расчётов до рабочей документации, геодезии и 3D-моделирования.",
+    desc: "Полный комплекс проектных работ - от концепции и расчётов до рабочей документации, геодезии и 3D-моделирования.",
     items: ["Расчёт конструкций", "Разработка КМД", "Теплотехнические расчёты", "3D-моделирование и геодезия"],
     categories: [],
     illustration: (
@@ -96,32 +106,40 @@ const advantages = [
 ];
 
 export function Services() {
-  const projects = store.getProjects();
+  useStoreVersion();
+  const serviceMap = store.getServiceExamples();
 
   return (
     <div className="bg-white pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600">Услуги</span>
-        </div>
-      </div>
+      <PageBreadcrumbs>
+        <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600">Услуги</span>
+      </PageBreadcrumbs>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <FadeIn>
           <p className="text-blue-700 text-sm font-medium tracking-wide uppercase mb-2">Услуги</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900">Что мы делаем</h1>
-          <p className="text-gray-500 text-lg mt-4 max-w-2xl">Полный комплекс работ — от проектирования до сдачи объекта в эксплуатацию</p>
+          <p className="text-gray-500 text-lg mt-4 max-w-2xl">Полный комплекс работ - от проектирования до сдачи объекта в эксплуатацию</p>
+          <p className="text-gray-500 text-sm mt-3 max-w-2xl">
+            <Link to="/audience" className="text-blue-700 font-medium hover:underline">Подборка по типу клиента</Link>
+            {" - бизнес, архитектор, частный заказ, дилер, давальческое сырьё."}
+          </p>
         </FadeIn>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {services.map((s, i) => {
-            const related = s.categories.length ? projects.filter(p => s.categories.includes(p.category || "")).slice(0, 2) : [];
+            const related = resolveServiceExamples(
+              s.id,
+              s.categories,
+              store.getProjects(),
+              serviceMap
+            );
             return (
-              <ScaleIn key={i} delay={i * 0.06}>
+              <ScaleIn key={s.id} delay={i * 0.06}>
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col">
                   {/* SVG Illustration */}
                   <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-4 mb-4 border border-gray-100">

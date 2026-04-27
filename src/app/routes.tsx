@@ -13,6 +13,7 @@ import { NotFound } from "./pages/NotFound";
 import { Blog } from "./pages/Blog";
 import { BlogDetail } from "./pages/BlogDetail";
 import { Clients } from "./pages/Clients";
+import { Audience } from "./pages/Audience";
 import { Vacancies } from "./pages/Vacancies";
 import { Privacy } from "./pages/Privacy";
 
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: "faq", element: <FAQ /> },
       { path: "contacts", element: <Contacts /> },
       { path: "clients", element: <Clients /> },
+      { path: "audience", element: <Audience /> },
       { path: "vacancies", element: <Vacancies /> },
       { path: "privacy", element: <Privacy /> },
       { path: "*", element: <NotFound /> },

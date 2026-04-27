@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { Menu, X, Phone, MessageCircle, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { useScrollLock } from "../lib/useScrollLock";
 
 const navLinks = [
   { to: "/", label: "Главная" },
   { to: "/about", label: "О компании" },
   { to: "/services", label: "Услуги" },
+  { to: "/audience", label: "Клиентам" },
   { to: "/gallery", label: "Проекты" },
   { to: "/calculator", label: "Калькулятор" },
   { to: "/blog", label: "Новости" },
@@ -16,10 +19,21 @@ const navLinks = [
 ];
 
 export function Header() {
+  useStoreVersion();
   const [menuOpen, setMenuOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const location = useLocation();
   const settings = store.getSettings();
+  useScrollLock(menuOpen);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   return (
     <>
@@ -51,7 +65,7 @@ export function Header() {
                         <MessageCircle size={16} className="text-green-500" /> WhatsApp
                       </a>
                     )}
-                    <a href="mailto:{settings.email}" className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700">
+                    <a href={`mailto:${settings.email}`} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700">
                       <Phone size={16} className="text-gray-400" /> {settings.email}
                     </a>
                   </motion.div>

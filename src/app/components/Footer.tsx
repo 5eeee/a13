@@ -1,9 +1,12 @@
 import { Link } from "react-router";
 import { Phone, MapPin, Mail, Factory } from "lucide-react";
+import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
 
 const pageLinks = [
   { to: "/about", label: "О компании" },
   { to: "/services", label: "Услуги" },
+  { to: "/audience", label: "Клиентам" },
   { to: "/gallery", label: "Проекты" },
   { to: "/calculator", label: "Калькулятор" },
   { to: "/blog", label: "Новости" },
@@ -12,6 +15,10 @@ const pageLinks = [
 ];
 
 export function Footer() {
+  useStoreVersion();
+  const settings = store.getSettings();
+  const telHref = `tel:${settings.phone.replace(/\D/g, "")}`;
+
   return (
     <footer className="bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -27,7 +34,7 @@ export function Footer() {
 
           <div>
             <h4 className="text-white font-medium mb-4 text-sm uppercase tracking-wider">Страницы</h4>
-            <ul className="space-y-2.5">
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
               {pageLinks.map((link) => (
                 <li key={link.to}>
                   <Link to={link.to} className="text-gray-400 hover:text-white transition-colors text-sm">{link.label}</Link>
@@ -39,21 +46,21 @@ export function Footer() {
           <div>
             <h4 className="text-white font-medium mb-4 text-sm uppercase tracking-wider">Контакты</h4>
             <div className="space-y-3">
-              <a href="tel:88888888888" className="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-sm">
+              <a href={telHref} className="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-sm">
                 <Phone size={16} className="text-blue-500" />
-                8 (888) 888-88-88
+                {settings.phone}
               </a>
-              <a href="mailto:info@a13bureau.ru" className="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-sm">
+              <a href={`mailto:${settings.email}`} className="flex items-center gap-2.5 text-gray-400 hover:text-white transition-colors text-sm">
                 <Mail size={16} className="text-blue-500" />
-                info@a13bureau.ru
+                {settings.email}
               </a>
               <div className="flex items-start gap-2.5 text-gray-400 text-sm">
                 <MapPin size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
-                <span>г. Москва, Рублевское шоссе д.26 корп.4</span>
+                <span>{settings.address}</span>
               </div>
               <div className="flex items-start gap-2.5 text-gray-400 text-sm">
                 <Factory size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
-                <span>Производство: г. Фрязино, ул. Горького д.10 стр.1</span>
+                <span>Производство: {settings.production}</span>
               </div>
             </div>
           </div>

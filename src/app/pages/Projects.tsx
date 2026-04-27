@@ -2,6 +2,10 @@ import { Link } from "react-router";
 import { useState, useRef } from "react";
 import { motion, useInView } from "motion/react";
 import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { publishedProjects } from "../lib/projectMedia";
+import { ProjectCover } from "../components/ProjectCover";
+import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -14,7 +18,8 @@ function FadeIn({ children, className = "", delay = 0 }: { children: React.React
 }
 
 export function Projects() {
-  const projects = store.getProjects();
+  useStoreVersion();
+  const projects = publishedProjects(store.getProjects());
   const [filter, setFilter] = useState("Все");
 
   const categories = ["Все", ...Array.from(new Set(projects.map(p => p.category).filter(Boolean)))];
@@ -22,13 +27,11 @@ export function Projects() {
 
   return (
     <div className="bg-white pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600">Галерея</span>
-        </div>
-      </div>
+      <PageBreadcrumbs>
+        <Link to="/" className="text-gray-400 hover:text-blue-800 transition-colors">Главная</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600">Галерея</span>
+      </PageBreadcrumbs>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
         <FadeIn>
@@ -59,7 +62,11 @@ export function Projects() {
                 className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 text-left group block"
               >
                 <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-gray-100 relative overflow-hidden">
-                  <img src={p.image} alt={p.title} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  <ProjectCover
+                    project={p}
+                    className="absolute inset-0"
+                    imgClassName="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                  />
                   {(p.images?.length || 0) > 1 && (
                     <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
                       {p.images.length} фото
