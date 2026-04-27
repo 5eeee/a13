@@ -98,6 +98,9 @@ const workflow = [
 /** Сколько проектов показывать в блоке «Наши работы» на главной (мобильная и десктоп). */
 const HOME_PORTFOLIO_PREVIEW_LIMIT = 6;
 
+/** Автосмена слайда в герое; при ручном переключении отсчёт начинается заново. */
+const HERO_AUTO_SLIDE_MS = 6000;
+
 export function Home() {
   useStoreVersion();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -154,9 +157,11 @@ export function Home() {
 
   useEffect(() => {
     if (heroProjects.length <= 1) return;
-    const timer = setInterval(() => setCurrentSlide((s) => (s + 1) % heroProjects.length), 6000);
-    return () => clearInterval(timer);
-  }, [heroProjects.length]);
+    const id = window.setTimeout(() => {
+      setCurrentSlide((s) => (s + 1) % heroProjects.length);
+    }, HERO_AUTO_SLIDE_MS);
+    return () => window.clearTimeout(id);
+  }, [currentSlide, heroProjects.length]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

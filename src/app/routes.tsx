@@ -1,8 +1,8 @@
 import { lazy } from "react";
 import { createBrowserRouter } from "react-router";
 import { Root } from "./components/Root";
+import { Home } from "./pages/Home";
 
-const Home = lazy(() => import("./pages/Home").then((m) => ({ default: m.Home })));
 const About = lazy(() => import("./pages/About").then((m) => ({ default: m.About })));
 const Services = lazy(() => import("./pages/Services").then((m) => ({ default: m.Services })));
 const Projects = lazy(() => import("./pages/Projects").then((m) => ({ default: m.Projects })));
