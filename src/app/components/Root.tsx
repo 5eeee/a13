@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "react-router";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
@@ -26,10 +26,9 @@ function YandexMetrika() {
 export function Root() {
   const navigate = useNavigate();
   const buffer = useRef("");
-  const [cmsReady, setCmsReady] = useState(false);
 
   useEffect(() => {
-    hydrateStore().finally(() => setCmsReady(true));
+    void hydrateStore();
   }, []);
 
   useEffect(() => {
@@ -49,15 +48,6 @@ export function Root() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [navigate]);
-
-  if (!cmsReady) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white text-gray-500 text-sm gap-2">
-        <span className="inline-block h-8 w-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-        Загрузка данных…
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white relative overflow-x-hidden">

@@ -328,7 +328,7 @@ export async function hydrateStore(): Promise<void> {
   if (hydratePromise) return hydratePromise;
   hydratePromise = (async () => {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
+    const t = setTimeout(() => ctrl.abort(), 5000);
     try {
       const r = await fetch(apiUrl("/api/documents"), { signal: ctrl.signal });
       clearTimeout(t);

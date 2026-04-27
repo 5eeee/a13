@@ -49,6 +49,19 @@ html::-webkit-scrollbar {
   animation-play-state: paused;
 }
 
+/* Indeterminate bar for PageLoader (Suspense) */
+@keyframes page-loader-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+.page-loader-bar {
+  animation: page-loader-slide 1.15s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
 /* Glass textures for light-transparent construction theme */
 .glass-card {
   background: rgba(255, 255, 255, 0.7);
