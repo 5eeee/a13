@@ -54,17 +54,17 @@ export function Projects() {
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
           {filtered.map((p, i) => (
-            <FadeIn key={p.id} delay={i * 0.06}>
+            <FadeIn key={p.id} delay={i * 0.06} className="h-full min-h-0">
               <Link
                 to={`/gallery/${p.id}`}
-                className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 text-left group block"
+                className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 text-left group flex h-full min-h-0 flex-col"
               >
-                <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-gray-100 relative overflow-hidden">
+                <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-gray-100 relative overflow-hidden shrink-0">
                   <ProjectCover
                     project={p}
-                    className="absolute inset-0"
+                    className="absolute inset-0 h-full w-full min-h-0"
                     imgClassName="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                   />
                   {(p.images?.length || 0) > 1 && (
@@ -73,13 +73,13 @@ export function Projects() {
                     </div>
                   )}
                 </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="p-5 flex flex-1 flex-col min-h-0">
+                  <div className="flex items-center gap-2 mb-1 shrink-0">
                     <span className="text-blue-500 text-xs font-medium">{p.year}</span>
                     {p.category && <span className="text-gray-400 text-xs">{p.category}</span>}
                   </div>
-                  <h3 className="text-gray-900 font-medium text-sm mb-1 group-hover:text-blue-800 transition-colors">{p.title}</h3>
-                  <p className="text-gray-500 text-xs">{p.description}</p>
+                  <h3 className="text-gray-900 font-medium text-sm mb-1 group-hover:text-blue-800 transition-colors line-clamp-2">{p.title}</h3>
+                  <p className="text-gray-500 text-xs line-clamp-3 flex-1 min-h-0">{p.description}</p>
                 </div>
               </Link>
             </FadeIn>

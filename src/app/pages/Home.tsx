@@ -391,8 +391,8 @@ export function Home() {
           {/* Мобильная / планшетная версия: одна карточка во вьюпорте, горизонтальный скролл */}
           <div className="lg:hidden -mx-4">
             <div
-              className="flex gap-4 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory px-4 pb-3 [scrollbar-width:thin]"
-              style={{ WebkitOverflowScrolling: "touch" }}
+              className="flex gap-4 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory px-4 pb-3 [scrollbar-width:thin] touch-pan-x"
+              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pinch-zoom" }}
               aria-label="Наши работы, прокрутка влево и вправо"
             >
               {portfolioPreview.map((project, idx) => (
@@ -425,7 +425,7 @@ export function Home() {
             <p className="text-center text-gray-400 text-xs px-4 mt-1 lg:hidden">Листайте влево и вправо</p>
           </div>
 
-          <div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-5 items-stretch">
             {portfolioPreview.map((project, idx) => (
               <Link
                 key={project.id}

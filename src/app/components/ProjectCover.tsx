@@ -6,7 +6,7 @@ import { projectCoverUrl } from "../lib/projectMedia";
 export function ProjectCoverPlaceholder({ title, className = "" }: { title: string; className?: string }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center text-center px-6 bg-gradient-to-br from-slate-100 via-blue-50/90 to-slate-200/90 ${className}`}
+      className={`flex h-full min-h-0 flex-col items-center justify-center text-center px-6 bg-gradient-to-br from-slate-100 via-blue-50/90 to-slate-200/90 ${className}`}
       role="img"
       aria-label={`Проект: ${title}, фотография появится позже`}
     >
@@ -37,7 +37,7 @@ export function ProjectCover({ project, className = "", imgClassName = "", alt, 
     <img
       src={url}
       alt={alt ?? project.title}
-      className={imgClassName}
+      className={`block max-w-full ${imgClassName}`}
       {...(fetchPriority ? { fetchpriority: fetchPriority } : {})}
       loading={loading}
       decoding="async"
