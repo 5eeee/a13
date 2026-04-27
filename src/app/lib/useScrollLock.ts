@@ -14,10 +14,12 @@ export function useScrollLock(locked: boolean) {
     const prevBodyPadding = body.style.paddingRight;
     const prevHtmlPadding = html.style.paddingRight;
     const scrollbarW = Math.max(0, window.innerWidth - html.clientWidth);
+    const coarsePointer = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
 
     body.style.overflow = "hidden";
     html.style.overflow = "hidden";
-    if (scrollbarW > 0) {
+    /* На тач-устройствах полоса чаще оверлейная — лишний padding даёт «подпрыгивание» при фокусе в поле */
+    if (scrollbarW > 0 && !coarsePointer) {
       const pad = `${scrollbarW}px`;
       body.style.paddingRight = pad;
       html.style.paddingRight = pad;
