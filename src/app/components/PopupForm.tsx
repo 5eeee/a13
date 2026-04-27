@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { sendEmailConfirmation } from "../lib/telegram";
@@ -82,15 +82,33 @@ export function PopupForm() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3">
-                  <input type="text" required placeholder="Ваше имя" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-sm transition-all" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ваше имя"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    autoComplete="name"
+                    className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-base transition-all"
+                  />
                   <PhoneInput
                     required
                     value={form.phone}
                     onChange={(v) => setForm({ ...form, phone: v })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-sm transition-all"
+                    className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-base transition-all"
                   />
-                  <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-sm transition-all" />
-                  <button type="submit" disabled={sending} className="w-full bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 transition-colors text-sm disabled:opacity-60">
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={18} strokeWidth={2} aria-hidden />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      autoComplete="email"
+                      className="w-full min-h-11 pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-400 text-base transition-all"
+                    />
+                  </div>
+                  <button type="submit" disabled={sending} className="w-full min-h-11 bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 transition-colors text-base disabled:opacity-60">
                     {sending ? "Отправка..." : "Отправить заявку"}
                   </button>
                 </form>

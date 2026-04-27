@@ -107,7 +107,7 @@ export function Contacts() {
                   <div>
                     <label className="text-gray-500 text-xs block mb-1.5">Ваше имя *</label>
                     <input type="text" placeholder="Иван Петров" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                      className="w-full min-h-11 bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                   <div>
                     <label className="text-gray-500 text-xs block mb-1.5">Телефон *</label>
@@ -115,18 +115,18 @@ export function Contacts() {
                       value={form.phone}
                       onChange={v => setForm(f => ({ ...f, phone: v }))}
                       required
-                      className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                      className="w-full min-h-11 bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                   </div>
                 </div>
                 <div>
                   <label className="text-gray-500 text-xs block mb-1.5">Email</label>
                   <input type="email" placeholder="email@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                    className="w-full min-h-11 bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
                 </div>
                 <div>
                   <label className="text-gray-500 text-xs block mb-1.5">Сообщение *</label>
                   <textarea placeholder="Опишите ваш проект или задайте вопрос..." rows={5} required value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all resize-none" />
+                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all resize-none" />
                 </div>
                 <button type="submit" disabled={sending} className="inline-flex items-center gap-2 bg-blue-700 text-white font-medium px-7 py-3 rounded-full text-sm hover:bg-blue-800 transition-colors disabled:opacity-60">
                   <Send size={16} />

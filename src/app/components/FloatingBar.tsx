@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, MessageSquarePlus } from "lucide-react";
+import { X, MessageSquarePlus, Mail } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { sendEmailConfirmation } from "../lib/telegram";
@@ -126,16 +126,40 @@ export function FloatingBar() {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-3">
-                    <input type="text" required placeholder="Ваше имя" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ваше имя"
+                      value={form.name}
+                      onChange={e => setForm({ ...form, name: e.target.value })}
+                      autoComplete="name"
+                      className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-base"
+                    />
                     <PhoneInput
                       required
                       value={form.phone}
                       onChange={v => setForm({ ...form, phone: v })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm"
+                      className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-base"
                     />
-                    <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm" />
-                    <textarea placeholder="Опишите ваш вопрос или задачу..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} rows={3} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm resize-none" />
-                    <button type="submit" disabled={sending} className="w-full bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 transition-colors text-sm disabled:opacity-60">
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={18} strokeWidth={2} aria-hidden />
+                      <input
+                        type="email"
+                        placeholder="Email"
+                        value={form.email}
+                        onChange={e => setForm({ ...form, email: e.target.value })}
+                        autoComplete="email"
+                        className="w-full min-h-11 pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-base"
+                      />
+                    </div>
+                    <textarea
+                      placeholder="Опишите ваш вопрос или задачу..."
+                      value={form.message}
+                      onChange={e => setForm({ ...form, message: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-base resize-none"
+                    />
+                    <button type="submit" disabled={sending} className="w-full min-h-11 bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 transition-colors text-base disabled:opacity-60">
                       {sending ? "Отправка..." : "Отправить заявку"}
                     </button>
                     <p className="text-gray-300 text-[11px] text-center">Нажимая кнопку, вы соглашаетесь на обработку данных</p>
