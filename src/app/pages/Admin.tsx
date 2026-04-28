@@ -28,6 +28,7 @@ import { PhoneInput } from "../components/PhoneInput";
 import { SortableAdminRow } from "../components/SortableAdminRow";
 import { AdminExpandPanel } from "../components/AdminExpandPanel";
 import { projectSelectLabel } from "../lib/adminLabels";
+import { encodeRasterImageForStorage } from "../lib/adminImageEncode";
 import { useScrollLock } from "../lib/useScrollLock";
 import { toast, Toaster } from "sonner";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -282,7 +283,7 @@ export function Admin() {
       toast.error(e instanceof Error ? e.message : "Ошибка сохранения");
     }
   };
-  const addAboutProductionImage = (e: ChangeEvent<HTMLInputElement>) => {
+  const addAboutProductionImage = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!f.type.startsWith("image/")) {
@@ -290,13 +291,10 @@ export function Admin() {
       e.target.value = "";
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = String(reader.result || "");
-      setAboutPage((p) => ({ ...p, productionImages: [...p.productionImages, url] }));
-    };
-    reader.readAsDataURL(f);
     e.target.value = "";
+    const url = await encodeRasterImageForStorage(f);
+    setAboutPage((p) => ({ ...p, productionImages: [...p.productionImages, url] }));
+    toast.success("Фото добавлено (сжато для сайта)");
   };
   const removeAboutProductionImage = (index: number) => {
     setAboutPage((p) => ({ ...p, productionImages: p.productionImages.filter((_, i) => i !== index) }));
@@ -451,30 +449,27 @@ export function Admin() {
     toast.success("Изображение обновлено - нажмите «Сохранить» для записи в сайт");
   };
 
-  /* Main image upload (single, uncropped) */
-  const handleMainImageUpload = (projectId: number, file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setProjects(prev => prev.map(p =>
-        p.id === projectId ? { ...p, image: reader.result as string } : p
-      ));
-    };
-    reader.readAsDataURL(file);
+  /* Main image upload (single, uncropped) → WebP где возможно */
+  const handleMainImageUpload = async (projectId: number, file: File) => {
+    const url = await encodeRasterImageForStorage(file);
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, image: url } : p)));
+    toast.success("Обложка обновлена (WebP при поддержке браузера)");
   };
 
   /* Multi-image upload for gallery */
-  const handleMultiImageUpload = (projectId: number, files: FileList) => {
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setProjects(prev => prev.map(p => {
-          if (p.id !== projectId) return p;
-          const newImages = [...p.images, reader.result as string];
-          return { ...p, images: newImages };
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+  const handleMultiImageUpload = async (projectId: number, files: FileList) => {
+    const list = Array.from(files);
+    const urls: string[] = [];
+    for (const file of list) {
+      urls.push(await encodeRasterImageForStorage(file));
+    }
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== projectId) return p;
+        return { ...p, images: [...p.images, ...urls] };
+      })
+    );
+    toast.success(list.length === 1 ? "Фото добавлено" : `Добавлено фото: ${list.length}`);
   };
   const removeImage = (projectId: number, idx: number) => {
     setProjects(prev => prev.map(p => {
@@ -487,25 +482,25 @@ export function Admin() {
     }));
   };
 
-  const handleBlogMainImageUpload = (id: number, file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setBlog(prev => prev.map(b => b.id === id ? { ...b, image: reader.result as string } : b));
-    };
-    reader.readAsDataURL(file);
+  const handleBlogMainImageUpload = async (id: number, file: File) => {
+    const url = await encodeRasterImageForStorage(file);
+    setBlog((prev) => prev.map((b) => (b.id === id ? { ...b, image: url } : b)));
+    toast.success("Обложка новости обновлена");
   };
 
-  const handleBlogMultiImageUpload = (blogId: number, files: FileList) => {
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setBlog(prev => prev.map(b => {
-          if (b.id !== blogId) return b;
-          return { ...b, images: [...b.images, reader.result as string] };
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+  const handleBlogMultiImageUpload = async (blogId: number, files: FileList) => {
+    const list = Array.from(files);
+    const urls: string[] = [];
+    for (const file of list) {
+      urls.push(await encodeRasterImageForStorage(file));
+    }
+    setBlog((prev) =>
+      prev.map((b) => {
+        if (b.id !== blogId) return b;
+        return { ...b, images: [...b.images, ...urls] };
+      })
+    );
+    toast.success(list.length === 1 ? "Фото добавлено" : `Добавлено фото: ${list.length}`);
   };
 
   const removeBlogImage = (blogId: number, idx: number) => {
@@ -1645,128 +1640,149 @@ export function Admin() {
                   <div><label className={lbl}>WhatsApp</label><input type="text" value={settings.whatsapp} onChange={e => setSettings({ ...settings, whatsapp: e.target.value })} placeholder="https://wa.me/79991234567" className={inp} /></div>
                 </div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                <h3 className="text-gray-900 font-semibold text-sm mb-4">Уведомления о заявках (сервер)</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Telegram-бот и SMTP не хранятся в браузере. Задайте на машине с API (файл <code className="text-xs bg-gray-100 px-1 rounded">server/.env</code>):
-                </p>
-                <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1 mb-2">
-                  <li><code className="text-xs">TELEGRAM_BOT_TOKEN</code>, <code className="text-xs">TELEGRAM_CHAT_ID</code> - чат с заявками</li>
-                  <li><code className="text-xs">SMTP_HOST</code>, <code className="text-xs">SMTP_PORT</code>, <code className="text-xs">SMTP_USER</code>, <code className="text-xs">SMTP_PASS</code> - письмо в офис (опционально <code className="text-xs">SMTP_FROM</code>)</li>
-                  <li><code className="text-xs">LEAD_TO_EMAIL</code> - куда слать (если пусто - берётся email из настроек выше)</li>
-                </ul>
-                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">Старые токены в JSON в БД не отдаются в публичный API; дублируйте в .env на сервере.</p>
-              </div>
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
-                <h3 className="text-slate-900 font-semibold text-sm mb-1">Двухфакторная аутентификация (2FA)</h3>
-                <p className="text-slate-500 text-xs mb-4 leading-relaxed">
-                  Код Google Authenticator / Яндекс Ключ. Вход в админку: пароль, затем 6-знаков. Настройка и проверка кода - через API; без сервера 2FA не заработает.
-                </p>
-                {settings.totpEnabled && !totpEnroll ? (
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-sm text-emerald-800 font-medium">2FA включена</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void (async () => {
-                          try {
-                            await store.setSettings({ ...settings, totpEnabled: false, totpSecret: "" });
-                            setSettings(store.getSettings());
-                            loadAll();
-                            toast.success("2FA отключена");
-                          } catch (e) {
-                            toast.error(e instanceof Error ? e.message : "Ошибка");
-                          }
-                        })();
-                      }}
-                      className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-900 hover:bg-amber-100"
-                    >
-                      Отключить 2FA
-                    </button>
+              <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+                <section className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col h-full min-h-0">
+                  <h3 className="text-gray-900 font-semibold text-sm mb-4">Уведомления о заявках (сервер)</h3>
+                  <div className="flex-1 min-h-0 flex flex-col gap-2 text-sm text-gray-600">
+                    <p>
+                      Telegram-бот и SMTP не хранятся в браузере. Задайте на машине с API (файл{" "}
+                      <code className="text-xs bg-gray-100 px-1 rounded">server/.env</code>):
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>
+                        <code className="text-xs">TELEGRAM_BOT_TOKEN</code>, <code className="text-xs">TELEGRAM_CHAT_ID</code> — чат с заявками
+                      </li>
+                      <li>
+                        <code className="text-xs">SMTP_HOST</code>, <code className="text-xs">SMTP_PORT</code>, <code className="text-xs">SMTP_USER</code>,{" "}
+                        <code className="text-xs">SMTP_PASS</code> — письмо в офис (опционально <code className="text-xs">SMTP_FROM</code>)
+                      </li>
+                      <li>
+                        <code className="text-xs">LEAD_TO_EMAIL</code> — куда слать (если пусто — берётся email из настроек выше)
+                      </li>
+                    </ul>
                   </div>
-                ) : !totpEnroll ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void (async () => {
-                        const p = await store.adminTotpProvision();
-                        if (!p) {
-                          toast.error("Сервер не ответил. Проверьте API и VITE_ADMIN_API_KEY.");
-                          return;
-                        }
-                        setTotpEnroll(p);
-                        setTotpEnrollCode("");
-                      })();
-                    }}
-                    className="rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white hover:bg-slate-800"
-                  >
-                    Включить 2FA
-                  </button>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-xs text-slate-600">Добавьте запись в приложении, затем введите текущий 6-знаков и нажмите «Активировать» (после - «Сохранить» в настройках не обязателен - мы сохраним в БД сразу).</p>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(totpEnroll.keyuri)}`}
-                        alt="QR 2FA"
-                        width={180}
-                        height={180}
-                        className="shrink-0 rounded-xl border border-slate-200 bg-white"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs text-slate-500 mb-1">Секрет (вручную, если нет сканера):</p>
-                        <code className="block break-all rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px] text-slate-800">{totpEnroll.secret}</code>
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-4 shrink-0">
+                    Старые токены в JSON в БД не отдаются в публичный API; дублируйте в .env на сервере.
+                  </p>
+                </section>
+                <section className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col h-full min-h-0">
+                  <h3 className="text-gray-900 font-semibold text-sm mb-2">Двухфакторная аутентификация (2FA)</h3>
+                  <p className="text-gray-600 text-xs mb-4 leading-relaxed flex-1 min-h-0">
+                    Код Google Authenticator / Яндекс Ключ. Вход в админку: пароль, затем 6 цифр. Настройка и проверка — через API; без сервера 2FA не заработает.
+                  </p>
+                  <div className="mt-auto shrink-0 space-y-3">
+                    {settings.totpEnabled && !totpEnroll ? (
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-sm text-emerald-800 font-medium">2FA включена</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void (async () => {
+                              try {
+                                await store.setSettings({ ...settings, totpEnabled: false, totpSecret: "" });
+                                setSettings(store.getSettings());
+                                loadAll();
+                                toast.success("2FA отключена");
+                              } catch (e) {
+                                toast.error(e instanceof Error ? e.message : "Ошибка");
+                              }
+                            })();
+                          }}
+                          className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-900 hover:bg-amber-100"
+                        >
+                          Отключить 2FA
+                        </button>
                       </div>
-                    </div>
-                    <div>
-                      <label className={lbl}>Код из приложения (6 цифр)</label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={totpEnrollCode}
-                        onChange={e => setTotpEnrollCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className={inp + " font-mono text-lg tracking-widest"}
-                        placeholder="000000"
-                      />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
+                    ) : !totpEnroll ? (
                       <button
                         type="button"
                         onClick={() => {
                           void (async () => {
-                            if (!totpEnroll) return;
-                            const ok = await store.adminTotpVerifyPair(totpEnroll.secret, totpEnrollCode);
-                            if (!ok) {
-                              toast.error("Код неверен. Подождите новый 30 с или проверьте часы в телефоне.");
+                            const p = await store.adminTotpProvision();
+                            if (!p) {
+                              toast.error("Сервер не ответил. Проверьте API и VITE_ADMIN_API_KEY.");
                               return;
                             }
-                            try {
-                              await store.setSettings({ ...settings, totpEnabled: true, totpSecret: totpEnroll.secret });
-                              setSettings(store.getSettings());
-                              setTotpEnroll(null);
-                              setTotpEnrollCode("");
-                              loadAll();
-                              toast.success("2FA включена и сохранена");
-                            } catch (e) {
-                              toast.error(e instanceof Error ? e.message : "Ошибка сохранения");
-                            }
+                            setTotpEnroll(p);
+                            setTotpEnrollCode("");
                           })();
                         }}
-                        className="rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                        className="rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white hover:bg-slate-800 w-full sm:w-auto"
                       >
-                        Активировать 2FA
+                        Включить 2FA
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => { setTotpEnroll(null); setTotpEnrollCode(""); }}
-                        className="rounded-full border border-slate-200 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50"
-                      >
-                        Отмена
-                      </button>
-                    </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-xs text-gray-600">
+                          Добавьте запись в приложении, затем введите текущий 6-значный код и нажмите «Активировать» (сохранение в БД сразу).
+                        </p>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(totpEnroll.keyuri)}`}
+                            alt="QR 2FA"
+                            width={180}
+                            height={180}
+                            className="shrink-0 rounded-xl border border-gray-200 bg-white"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs text-gray-500 mb-1">Секрет (вручную, если нет сканера):</p>
+                            <code className="block break-all rounded-lg border border-gray-200 bg-gray-50 p-2 text-[11px] text-gray-800">{totpEnroll.secret}</code>
+                          </div>
+                        </div>
+                        <div>
+                          <label className={lbl}>Код из приложения (6 цифр)</label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={totpEnrollCode}
+                            onChange={(e) => setTotpEnrollCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            className={inp + " font-mono text-lg tracking-widest"}
+                            placeholder="000000"
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void (async () => {
+                                if (!totpEnroll) return;
+                                const ok = await store.adminTotpVerifyPair(totpEnroll.secret, totpEnrollCode);
+                                if (!ok) {
+                                  toast.error("Код неверен. Подождите новый 30 с или проверьте часы в телефоне.");
+                                  return;
+                                }
+                                try {
+                                  await store.setSettings({ ...settings, totpEnabled: true, totpSecret: totpEnroll.secret });
+                                  setSettings(store.getSettings());
+                                  setTotpEnroll(null);
+                                  setTotpEnrollCode("");
+                                  loadAll();
+                                  toast.success("2FA включена и сохранена");
+                                } catch (e) {
+                                  toast.error(e instanceof Error ? e.message : "Ошибка сохранения");
+                                }
+                              })();
+                            }}
+                            className="rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                          >
+                            Активировать 2FA
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTotpEnroll(null);
+                              setTotpEnrollCode("");
+                            }}
+                            className="rounded-full border border-gray-200 px-4 py-2 text-xs text-gray-600 hover:bg-gray-50"
+                          >
+                            Отмена
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </section>
               </div>
               <div className="bg-white border border-gray-200 rounded-2xl p-5">
                 <h3 className="text-gray-900 font-semibold text-sm mb-4">Аналитика</h3>

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useScrollLock } from "../lib/useScrollLock";
 import Cropper, { type Area } from "react-easy-crop";
 import { X } from "lucide-react";
+import { canvasToStorageDataUrl } from "../lib/adminImageEncode";
 
 type AspectPreset = "free" | "1:1" | "16:9" | "9:16" | "4:3";
 
@@ -40,7 +41,7 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string>
     pixelCrop.width,
     pixelCrop.height
   );
-  return canvas.toDataURL("image/jpeg", 0.9);
+  return canvasToStorageDataUrl(canvas);
 }
 
 type Props = {
