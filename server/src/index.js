@@ -16,8 +16,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
 const DATA_FILE = process.env.DATA_FILE || path.join(DATA_DIR, "cms.json");
 
-/** Режим без Docker: STORAGE=file или пустой DATABASE_URL */
-const USE_FILE = process.env.STORAGE === "file" || !DATABASE_URL;
+/** Файл server/data/cms.json только если DATABASE_URL не задан. При заданном URL всё идёт в PostgreSQL. */
+const USE_FILE = !DATABASE_URL;
 
 const LEAD_RATE_WINDOW_MS = Number(process.env.LEAD_RATE_WINDOW_MS) || 60_000;
 const LEAD_RATE_MAX = Number(process.env.LEAD_RATE_MAX) || 20;
