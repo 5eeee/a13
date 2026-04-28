@@ -15,7 +15,9 @@
     "pack:friend:zip": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pack-friend.ps1 -Zip",
     "dev:server": "npm run dev --prefix server",
     "server:install": "npm install --prefix server",
-    "migrate:cms": "npm run migrate:json --prefix server"
+    "migrate:cms": "npm run migrate:json --prefix server",
+    "init:pg": "npm run init:pg --prefix server",
+    "build:default-cms": "npx vite-node --config vite.config.ts scripts/build-default-from-store.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
