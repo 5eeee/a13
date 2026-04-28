@@ -85,8 +85,8 @@
       npm start
 
    Скрипт сам:
-   - если Docker Desktop ЗАПУЩЕН — поднимет PostgreSQL и пропишет server\.env;
-   - если Docker НЕТ — включит режим файла (server\data\cms.json);
+   - если Docker Desktop ЗАПУЩЕН — поднимет PostgreSQL и пропишет DATABASE_URL в server\.env (все данные CMS в БД);
+   - если Docker НЕТ — в server\.env без DATABASE_URL API пишет в server\data\cms.json;
    - откроет API в отдельном окне и запустит сайт.
 
 2) АДРЕСА
@@ -108,9 +108,8 @@
    Важно: сначала установите и ЗАПУСТИТЕ Docker Desktop, иначе команда
    docker compose up -d выдаст ошибку про pipe dockerDesktopLinuxEngine.
 
-5) РЕЖИМ БЕЗ DOCKER (файл)
-   В server\.env должно быть:
-   STORAGE=file
+5) РЕЖИМ БЕЗ POSTGRESQL (только файл)
+   Оставьте в server\.env без строки DATABASE_URL (или закомментируйте её).
    PORT=3001
    Данные: server\data\cms.json
 
@@ -120,8 +119,11 @@
    $env:PGPASSWORD = "ваш_пароль_postgres"
    & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h 127.0.0.1 -U postgres -d postgres -f scripts\init-postgres-local.sql
 
-   Потом в server\.env уберите STORAGE=file и укажите:
+   В server\.env укажите:
    DATABASE_URL=postgresql://a13:a13@127.0.0.1:5432/a13
+
+   Перенос старых данных из JSON в БД (один раз):
+   npm run migrate:cms
 
 7) API-КЛЮЧ (необязательно)
    Если в server\.env задать ADMIN_API_KEY=секрет — для сохранения из админки

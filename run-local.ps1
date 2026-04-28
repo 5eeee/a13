@@ -37,14 +37,14 @@ ADMIN_API_KEY=
 
 if (-not $usePostgres) {
   @"
-STORAGE=file
+# Без Docker: задайте DATABASE_URL на PostgreSQL — иначе API хранит данные в server/data/cms.json
 PORT=3001
 ADMIN_API_KEY=
 
 "@ | Set-Content -LiteralPath $serverEnv -Encoding utf8
-  Write-Host "File mode: server/data/cms.json" -ForegroundColor Yellow
+  Write-Host "Режим файла (нет DATABASE_URL): server/data/cms.json" -ForegroundColor Yellow
   if (-not $dockerWorks) {
-    Write-Host "Install and START Docker Desktop, then run this script again for PostgreSQL." -ForegroundColor DarkYellow
+    Write-Host "Запустите Docker Desktop и снова этот скрипт — поднимется PostgreSQL и пропишется DATABASE_URL." -ForegroundColor DarkYellow
   }
 }
 
