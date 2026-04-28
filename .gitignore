@@ -4,7 +4,8 @@ dist
 .env.local
 server/.env
 server/node_modules
-server/data/
+server/data/*
+!server/data/default-cms.json
 *.log
 scripts/pptx_dump.txt
 .DS_Store

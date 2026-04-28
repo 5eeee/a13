@@ -17,3 +17,5 @@
   4. Если раньше данные жили в `server/data/cms.json`, один раз выполните: `npm run migrate:cms`.
 
   Пока `DATABASE_URL` задан, все документы CMS и заявки сохраняются в PostgreSQL. Если `DATABASE_URL` убрать, API снова использует только JSON-файл.
+
+  **Первичная заливка в БД:** после `docker compose up -d` и строки `DATABASE_URL` в `server/.env` выполните `npm run init:pg` (подтянет `server/data/cms.json` если есть, иначе шаблон `server/data/default-cms.json`). Обновить шаблон из кода: `npm run build:default-cms`.

@@ -122,8 +122,15 @@
    В server\.env укажите:
    DATABASE_URL=postgresql://a13:a13@127.0.0.1:5432/a13
 
-   Перенос старых данных из JSON в БД (один раз):
+   Первичная заливка в PostgreSQL (один раз после создания БД):
+   npm run init:pg
+   (учитывает server\data\cms.json если есть, иначе полный шаблон как на сайте)
+
+   Только перенос из cms.json без шаблона:
    npm run migrate:cms
+
+   Пересобрать шаблон default-cms.json из исходников фронта:
+   npm run build:default-cms
 
 7) API-КЛЮЧ (необязательно)
    Если в server\.env задать ADMIN_API_KEY=секрет — для сохранения из админки
