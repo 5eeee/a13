@@ -11,3 +11,6 @@ server/data/*
 Thumbs.db
 node_modules/
 .next/
+
+.cursor/
+.cursor

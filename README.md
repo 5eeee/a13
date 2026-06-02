@@ -1,6 +1,8 @@
 # Бюро A13 — сайт и CMS
 
-Светопрозрачные конструкции: витрина, калькулятор, блог, админка, API на Node.js + PostgreSQL.
+> **Полная техническая документация:** [docs/TECHNICAL.md](docs/TECHNICAL.md) · [PROJECT-README.md](PROJECT-README.md) · **GitHub:** [github.com/5eeee/a13](https://github.com/5eeee/a13)
+
+Светопрозрачные конструкции
 
 ## Быстрый старт
 
