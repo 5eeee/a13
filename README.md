@@ -1,6 +1,6 @@
 # Бюро A13 — сайт и CMS
 
-> **Полная техническая документация:** [docs/TECHNICAL.md](docs/TECHNICAL.md) · [PROJECT-README.md](PROJECT-README.md) · **GitHub:** [github.com/5eeee/a13](https://github.com/5eeee/a13)
+> **Прод:** https://a13bureau.ru/ · **GitHub:** [github.com/5eeee/a13](https://github.com/5eeee/a13)
 
 Светопрозрачные конструкции
 
