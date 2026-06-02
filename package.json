@@ -10,14 +10,19 @@
     "setup": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup-and-run.ps1 -InstallOnly",
     "go": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup-and-run.ps1",
     "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/clean-artifacts.ps1",
-    "optimize:images": "node scripts/optimize-public-images.mjs",
     "pack:friend": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pack-friend.ps1",
     "pack:friend:zip": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pack-friend.ps1 -Zip",
     "dev:server": "npm run dev --prefix server",
     "server:install": "npm install --prefix server",
     "migrate:cms": "npm run migrate:json --prefix server",
     "init:pg": "npm run init:pg --prefix server",
-    "build:default-cms": "npx vite-node --config vite.config.ts scripts/build-default-from-store.ts"
+    "build:default-cms": "npx vite-node --config vite.config.ts scripts/build-default-from-store.ts",
+    "fetch:project-photos": "node scripts/fetch-project-photos.mjs",
+    "fetch:project-photos:resume": "node scripts/fetch-project-photos.mjs --resume",
+    "prune:images": "node scripts/prune-project-images.mjs",
+    "prune:images:dry": "node scripts/prune-project-images.mjs --dry-run",
+    "fix:cms-paths": "npm run fix:cms-paths --prefix server",
+    "test:prod": "node scripts/test-production.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

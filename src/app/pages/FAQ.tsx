@@ -1,18 +1,12 @@
 import { Link } from "react-router";
+import { FadeIn } from "../components/ui/motion";
 import { useState, useRef } from "react";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import { motion, useInView, AnimatePresence } from "motion/react";
 import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
-
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
+import { store } from "../lib/store";
+import { useStoreVersion } from "../lib/useStoreVersion";
+import { telHref } from "../lib/phone";
 
 const faqs = [
   {
@@ -46,6 +40,8 @@ const faqs = [
 ];
 
 export function FAQ() {
+  useStoreVersion();
+  const settings = store.getSettings();
   const [open, setOpen] = useState<number | null>(null);
 
   const schemaData = {
@@ -115,7 +111,7 @@ export function FAQ() {
             <h2 className="text-2xl font-bold text-white mb-4">Остались вопросы?</h2>
             <p className="text-blue-100 mb-6">Свяжитесь с нами - мы ответим на все ваши вопросы</p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="tel:88888888888" className="bg-white text-blue-700 font-medium px-6 py-3 rounded-full text-sm hover:bg-blue-50 transition-colors">8 (888) 888-88-88</a>
+              <a href={telHref(settings.phone)} className="bg-white text-blue-700 font-medium px-6 py-3 rounded-full text-sm hover:bg-blue-50 transition-colors">{settings.phone}</a>
               <Link to="/contacts" className="border border-white/30 text-white font-medium px-6 py-3 rounded-full text-sm hover:bg-white/10 transition-colors inline-flex items-center gap-2">
                 Написать нам <ArrowRight size={16} />
               </Link>

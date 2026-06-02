@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { FadeIn, ScaleIn, SlideIn, AnimatedCounter } from "../components/ui/motion";
 import { Link } from "react-router";
 import {
   ChevronLeft, ChevronRight, ArrowRight, Factory, Clock, Wrench, Shield,
@@ -10,65 +11,6 @@ import { store, partnersForSite } from "../lib/store";
 import { useStoreVersion } from "../lib/useStoreVersion";
 import { publishedProjects, projectsForHeroSlider, projectCoverUrl } from "../lib/projectMedia";
 import { ProjectCover } from "../components/ProjectCover";
-
-/* ---- helpers ---- */
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
-function ScaleIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, scale: 0.92 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
-function SlideIn({ children, className = "", delay = 0, direction = "left" }: { children: React.ReactNode; className?: string; delay?: number; direction?: "left" | "right" }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const x = direction === "left" ? -40 : 40;
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, x }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
-
-function AnimatedCounter({ value, duration = 1.4 }: { value: number; duration?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    if (!inView) return;
-    const startTime = performance.now();
-    const ms = duration * 1000;
-    let raf = 0;
-    function tick(now: number) {
-      const progress = Math.min((now - startTime) / ms, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.min(value, Math.round(eased * value)));
-      if (progress < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setDisplay(value);
-      }
-    }
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, value, duration]);
-
-  return <span ref={ref}>{display.toLocaleString("ru-RU")}</span>;
-}
-
-/* ---- data ---- */
 
 const specializations = [
   { title: "Светопрозрачные фасады", icon: Building2, link: "/services" },
@@ -201,7 +143,14 @@ export function Home() {
               <p className="text-white/50 text-sm mb-3 tracking-wide uppercase">Бюро А13</p>
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 max-w-4xl leading-[1.1]">Светопрозрачные конструкции</h1>
               <p className="text-white/60 text-lg mb-8 max-w-xl">Все проекты скрыты из слайдера в админке или список пуст - откройте галерею или настройте показ.</p>
-              <Link to="/gallery" className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-7 py-3.5 rounded-full text-sm font-medium">Галерея <ArrowRight size={16} /></Link>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link to="/calculator" className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-7 py-3.5 rounded-full text-sm font-semibold shadow-lg shadow-blue-700/30 transition-all hover:shadow-blue-700/40">
+                  <Calculator size={18} /> Рассчитать стоимость
+                </Link>
+                <Link to="/gallery" className="inline-flex items-center gap-2 border border-white/30 text-white px-7 py-3.5 rounded-full text-sm font-medium hover:bg-white/10 transition-all">
+                  Галерея <ArrowRight size={16} />
+                </Link>
+              </div>
             </div>
           </>
         ) : slide ? (
@@ -246,9 +195,21 @@ export function Home() {
                   <p className="text-white/60 text-lg mb-8 max-w-xl">{slide.description}</p>
                 </motion.div>
               </AnimatePresence>
-              <Link to={`/gallery/${slide.id}`} className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-7 py-3.5 rounded-full transition-all text-sm font-medium hover:shadow-lg hover:shadow-blue-700/30">
-                Смотреть проект <ArrowRight size={16} />
-              </Link>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  to="/calculator"
+                  className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-7 py-3.5 rounded-full text-sm font-semibold shadow-lg shadow-blue-700/35 transition-all hover:shadow-blue-700/50"
+                >
+                  <Calculator size={18} />
+                  Рассчитать стоимость
+                </Link>
+                <Link
+                  to={`/gallery/${slide.id}`}
+                  className="inline-flex items-center gap-2 border border-white/35 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-7 py-3.5 rounded-full text-sm font-medium transition-all"
+                >
+                  Смотреть проект <ArrowRight size={16} />
+                </Link>
+              </div>
 
               <div className="flex items-center gap-4 mt-10">
                 <button

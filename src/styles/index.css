@@ -1,8 +1,28 @@
-@import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
 
 /* Меньше сдвига макета при появлении полосы прокрутки; на мобильных часто без эффекта */
 html {
   scrollbar-gutter: stable;
+}
+
+/* Лёгкий режим и prefers-reduced-motion: меньше анимаций */
+html.lite-mode *,
+html.lite-mode *::before,
+html.lite-mode *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

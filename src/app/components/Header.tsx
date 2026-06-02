@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
-import { Menu, X, Phone, MessageCircle, ChevronDown } from "lucide-react";
+import { Menu, X, Phone, Mail, MessageCircle, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { store } from "../lib/store";
 import { useStoreVersion } from "../lib/useStoreVersion";
@@ -66,7 +66,7 @@ export function Header() {
                       </a>
                     )}
                     <a href={`mailto:${settings.email}`} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700">
-                      <Phone size={16} className="text-gray-400" /> {settings.email}
+                      <Mail size={16} className="text-blue-700" /> {settings.email}
                     </a>
                   </motion.div>
                 )}

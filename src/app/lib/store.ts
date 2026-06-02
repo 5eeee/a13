@@ -2,6 +2,8 @@
 
 import type { ServiceExamplesMap } from "./serviceExamples";
 import { mergeAboutStructured, type AboutStructured } from "./aboutStructured";
+import { DEFAULT_SITE_UX, type SiteUxExtension } from "./siteUx";
+import { adminHeaders, formatFetchError } from "./adminApi";
 export type { AboutStructured };
 
 export interface Project {
@@ -30,6 +32,8 @@ export interface BlogPost {
   published?: boolean;
 }
 
+export type LeadStatus = "new" | "pending" | "archived";
+
 export interface Lead {
   id: number;
   name: string;
@@ -42,6 +46,11 @@ export interface Lead {
   source: string;
   region?: string;
   floors?: string;
+  /** Номер заявки: CALC-001, FORM-002, POP-003 */
+  ref?: string;
+  status?: LeadStatus;
+  /** Заметка менеджера в админке */
+  adminNote?: string;
 }
 
 export interface StatItem {
@@ -66,7 +75,7 @@ export interface Partner {
   published?: boolean;
 }
 
-export interface SiteSettings {
+export interface SiteSettings extends SiteUxExtension {
   phone: string;
   email: string;
   address: string;
@@ -126,9 +135,24 @@ type DocKey =
 
 const B = import.meta.env.BASE_URL;
 
-function pptxAsset(index: number): string {
-  const n = (index % 53) + 1;
+/** Галерея проектов: WebP из public/projects/web/ (источник — Wikimedia Commons, см. web/ATTRIBUTION.txt). */
+function projectWebTriplet(projectIndex0: number): [string, string, string] {
+  const n = String(projectIndex0 + 1).padStart(2, "0");
+  const b = B;
+  return [`${b}projects/web/${n}-a.webp`, `${b}projects/web/${n}-b.webp`, `${b}projects/web/${n}-c.webp`];
+}
+
+/** Старые слайды презентации — для блога и запасных иллюстраций. */
+const PPTX_COUNT = 53;
+
+function pptxUrlNum(n: number): string {
   return `${B}projects/pptx-${String(n).padStart(2, "0")}.webp`;
+}
+
+/** Произвольный индекс для блога — кольцо 1..53 по pptx-*.webp. */
+function pptxAsset(index: number): string {
+  const n = (index % PPTX_COUNT) + 1;
+  return pptxUrlNum(n);
 }
 
 const PROJECT_SEEDS: Array<Pick<Project, "title" | "year" | "description" | "category">> = [
@@ -153,8 +177,7 @@ const PROJECT_SEEDS: Array<Pick<Project, "title" | "year" | "description" | "cat
 ];
 
 export const DEFAULT_PROJECTS: Project[] = PROJECT_SEEDS.map((p, i) => {
-  const off = i * 3;
-  const imgs = [pptxAsset(off), pptxAsset(off + 1), pptxAsset(off + 2)];
+  const imgs = projectWebTriplet(i);
   return {
     id: i + 1,
     sortOrder: (i + 1) * 10,
@@ -239,6 +262,7 @@ function normalizeStatsList(raw: StatItem[] | undefined): StatItem[] {
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
+  ...DEFAULT_SITE_UX,
   phone: "+7 (916) 117-13-50",
   email: "info@a13bureau.ru",
   address: "г. Москва, Рублевское шоссе д.26 корп.4",
@@ -258,15 +282,24 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 /* ---- API + кэш ---- */
 
 export function apiUrl(path: string): string {
-  const base = (import.meta.env.VITE_API_URL as string | undefined) || "";
+  let base = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "";
+  // Защита от ошибочной prod-сборки с localhost (Safari: «Load failed»)
+  if (import.meta.env.PROD && /127\.0\.0\.1|localhost/i.test(base)) {
+    base = "";
+  }
   return `${base}${path}`;
 }
 
-function adminHeaders(): HeadersInit {
-  const h: HeadersInit = { "Content-Type": "application/json" };
-  const k = import.meta.env.VITE_ADMIN_API_KEY as string | undefined;
-  if (k) (h as Record<string, string>)["X-Admin-Key"] = k;
-  return h;
+function networkErrorMessage(e: unknown): string {
+  const msg = e instanceof Error ? e.message : "";
+  if (
+    msg === "Failed to fetch" ||
+    /load failed/i.test(msg) ||
+    /networkerror/i.test(msg)
+  ) {
+    return "Нет связи с сервером. Проверьте интернет или попробуйте позже.";
+  }
+  return msg || "Ошибка сети";
 }
 
 type Cache = {
@@ -295,32 +328,56 @@ export function subscribeStore(cb: () => void): () => void {
   return () => listeners.delete(cb);
 }
 
-function applyDocuments(docs: Record<string, unknown>) {
-  if (Array.isArray(docs.projects)) cache.projects = docs.projects as Project[];
-  if (Array.isArray(docs.blog)) cache.blog = docs.blog as BlogPost[];
-  if (Array.isArray(docs.stats)) cache.stats = docs.stats as StatItem[];
-  if (docs.settings && typeof docs.settings === "object") cache.settings = docs.settings as SiteSettings;
-  if (Array.isArray(docs.reviews)) cache.reviews = docs.reviews as Review[];
-  if (Array.isArray(docs.partners)) cache.partners = docs.partners as Partner[];
-  if (Array.isArray(docs.leads)) cache.leads = docs.leads as Lead[];
-  if (docs.serviceExamples && typeof docs.serviceExamples === "object" && !Array.isArray(docs.serviceExamples)) {
-    cache.serviceExamples = docs.serviceExamples as ServiceExamplesMap;
+/** Убирает устаревший префикс /a13/ в путях к статике из БД. */
+function normalizeCmsData<T>(data: T): T {
+  if (typeof data === "string") {
+    return (data.startsWith("/a13/") ? data.replace(/^\/a13\//, "/") : data) as T;
   }
-  if (docs.aboutPage && typeof docs.aboutPage === "object" && !Array.isArray(docs.aboutPage)) {
-    cache.aboutPage = docs.aboutPage as AboutPageData;
+  if (Array.isArray(data)) return data.map((x) => normalizeCmsData(x)) as T;
+  if (data && typeof data === "object") {
+    const o: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) o[k] = normalizeCmsData(v);
+    return o as T;
+  }
+  return data;
+}
+
+function applyDocuments(docs: Record<string, unknown>) {
+  const d = normalizeCmsData(docs);
+  if (Array.isArray(d.projects)) cache.projects = d.projects as Project[];
+  if (Array.isArray(d.blog)) cache.blog = d.blog as BlogPost[];
+  if (Array.isArray(d.stats)) cache.stats = d.stats as StatItem[];
+  if (d.settings && typeof d.settings === "object") cache.settings = d.settings as SiteSettings;
+  if (Array.isArray(d.reviews)) cache.reviews = d.reviews as Review[];
+  if (Array.isArray(d.partners)) cache.partners = d.partners as Partner[];
+  if (Array.isArray(d.leads)) cache.leads = d.leads as Lead[];
+  if (d.serviceExamples && typeof d.serviceExamples === "object" && !Array.isArray(d.serviceExamples)) {
+    cache.serviceExamples = d.serviceExamples as ServiceExamplesMap;
+  }
+  if (d.aboutPage && typeof d.aboutPage === "object" && !Array.isArray(d.aboutPage)) {
+    cache.aboutPage = d.aboutPage as AboutPageData;
   }
 }
 
 async function putDocument(key: DocKey, data: unknown): Promise<void> {
-  const r = await fetch(apiUrl(`/api/documents/${key}`), {
-    method: "PUT",
-    headers: adminHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!r.ok) {
-    const t = await r.text();
-    throw new Error(t || r.statusText);
+  let r: Response;
+  try {
+    r = await fetch(apiUrl(`/api/documents/${key}`), {
+      method: "PUT",
+      headers: adminHeaders(),
+      credentials: "same-origin",
+      body: JSON.stringify(data),
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Сеть недоступна";
+    if (/failed to fetch|load failed|networkerror/i.test(msg)) {
+      throw new Error(
+        "Не удалось связаться с API. Проверьте, что сервер запущен, и укажите ключ ADMIN_API_KEY в блоке «Подключение к серверу»."
+      );
+    }
+    throw e;
   }
+  if (!r.ok) throw new Error(await formatFetchError(r));
 }
 
 /** Загрузить все документы с API (при ошибке остаются значения по умолчанию из геттеров). */
@@ -435,13 +492,30 @@ export const store = {
     emit();
   },
   addLead: async (lead: Omit<Lead, "id">) => {
-    const r = await fetch(apiUrl("/api/leads"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(lead),
-    });
-    if (!r.ok) throw new Error(await r.text());
-    const newLead = (await r.json()) as Lead;
+    let r: Response;
+    try {
+      r = await fetch(apiUrl("/api/leads"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(lead),
+      });
+    } catch (e) {
+      throw new Error(networkErrorMessage(e));
+    }
+    const text = await r.text();
+    if (!r.ok) {
+      let detail = text;
+      try {
+        const j = JSON.parse(text) as { error?: string };
+        if (j.error) detail = j.error;
+      } catch {
+        if (r.status === 413) detail = "Вложения слишком большие. Уберите часть файлов.";
+        else if (r.status === 429) detail = "Слишком много заявок. Попробуйте через минуту.";
+      }
+      throw new Error(detail || `Ошибка сервера (${r.status})`);
+    }
+    const newLead = JSON.parse(text) as Lead;
     const list = cache.leads ?? [];
     cache.leads = [...list, newLead];
     emit();
@@ -537,5 +611,15 @@ export const store = {
     }
     await Promise.all(tasks);
     emit();
+  },
+
+  getAnalyticsSummary: async (): Promise<import("./analytics").AnalyticsSummary | null> => {
+    try {
+      const r = await fetch(apiUrl("/api/analytics/summary"), { headers: adminHeaders() });
+      if (!r.ok) return null;
+      return (await r.json()) as import("./analytics").AnalyticsSummary;
+    } catch {
+      return null;
+    }
   },
 };

@@ -82,7 +82,7 @@ if ($InstallOnly) {
 }
 
 # --- Браузер: после небольшой задержки (пока поднимается Vite) ---
-$openUrl = "http://localhost:5173/a13/"
+$openUrl = "http://localhost:5173/"
 if (-not $NoBrowser) {
   $u = $openUrl
   Start-Job -ScriptBlock { param($url) Start-Sleep -Seconds 5; if ($url) { Start-Process $url } } -ArgumentList $u | Out-Null

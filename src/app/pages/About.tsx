@@ -1,47 +1,12 @@
 import { Link } from "react-router";
+import { FadeIn, AnimatedCounter } from "../components/ui/motion";
 import { Phone, Mail } from "lucide-react";
 import { store } from "../lib/store";
 import { useStoreVersion } from "../lib/useStoreVersion";
-import { useRef, useState, useEffect } from "react";
-import { motion, useInView } from "motion/react";
+import { useState, useEffect } from "react";
 import { AboutPageSections } from "../components/AboutPageSections";
 import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 import { mergeAboutStructured } from "../lib/aboutStructured";
-
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
-
-function AnimatedCounter({ value, duration = 1.4 }: { value: number; duration?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const [display, setDisplay] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    const startTime = performance.now();
-    const ms = duration * 1000;
-    let raf = 0;
-    function tick(now: number) {
-      const progress = Math.min((now - startTime) / ms, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.min(value, Math.round(eased * value)));
-      if (progress < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setDisplay(value);
-      }
-    }
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, value, duration]);
-  return <span ref={ref}>{display.toLocaleString("ru-RU")}</span>;
-}
 
 export function About() {
   useStoreVersion();

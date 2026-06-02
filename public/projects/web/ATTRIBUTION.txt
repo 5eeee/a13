@@ -1,0 +1,9 @@
+Иллюстрации в этой папке (01-a.webp … 18-c.webp) получены из Wikimedia Commons и обработаны
+(масштаб до 1400 px по большей стороне, формат WebP) скриптом scripts/fetch-project-photos.mjs.
+
+Соответствие файлов исходным снимкам на Commons: см. manifest.json в этой же папке.
+У каждого файла на странице https://commons.wikimedia.org указаны автор и лицензия
+(как правило Creative Commons и совместимые варианты).
+
+Политика User-Agent при загрузке:
+https://meta.wikimedia.org/wiki/User-Agent_policy

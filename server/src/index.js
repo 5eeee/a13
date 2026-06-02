@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import pg from "pg";
 import { forwardLeadNotifications } from "./leadNotify.js";
+import { enrichNewLead } from "./leadMeta.js";
 import { authenticator } from "otplib";
 
 const { Pool } = pg;
@@ -80,8 +81,10 @@ function validateLeadBody(raw) {
   let files = Array.isArray(raw.files) ? raw.files.map(String).slice(0, 30) : [];
   files = files.map((f) => f.slice(0, 1_200_000));
   const filesTotal = files.reduce((a, f) => a + f.length, 0);
-  if (filesTotal > 6 * 1024 * 1024) throw new Error("Validation");
-  if (!name || !phone) throw new Error("Validation");
+  if (filesTotal > 8 * 1024 * 1024) throw new Error("FilesTooLarge");
+  const phoneDigits = phone.replace(/\D/g, "");
+  if (!name) throw new Error("NoName");
+  if (phoneDigits.length < 10) throw new Error("NoPhone");
   return { name, phone, email, message, calculation, source, region, floors, files };
 }
 
@@ -141,7 +144,7 @@ async function appendLead(body) {
     let leads = all.leads;
     if (!Array.isArray(leads)) leads = [];
     const maxId = leads.reduce((m, l) => Math.max(m, Number(l.id) || 0), 0);
-    const newLead = { ...body, id: maxId + 1 };
+    const newLead = enrichNewLead(leads, { ...body, id: maxId + 1 });
     if (!newLead.date) newLead.date = new Date().toISOString();
     all.leads = [...leads, newLead];
     writeFileStore(all);
@@ -154,7 +157,7 @@ async function appendLead(body) {
     let leads = rows[0]?.data;
     if (!Array.isArray(leads)) leads = [];
     const maxId = leads.reduce((m, l) => Math.max(m, Number(l.id) || 0), 0);
-    const newLead = { ...body, id: maxId + 1 };
+    const newLead = enrichNewLead(leads, { ...body, id: maxId + 1 });
     if (!newLead.date) newLead.date = new Date().toISOString();
     leads = [...leads, newLead];
     await client.query(
@@ -184,6 +187,14 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true, storage: USE_FILE ? "file" : "postgres" });
 });
 
+app.get("/api/admin/status", (_req, res) => {
+  res.json({ protected: Boolean(ADMIN_API_KEY), storage: USE_FILE ? "file" : "postgres" });
+});
+
+app.get("/api/admin/ping", requireAdmin, (_req, res) => {
+  res.json({ ok: true });
+});
+
 /** Заявки: до 512 КБ, отдельный лимит от тяжёлого JSON админки */
 app.post("/api/leads", express.json({ limit: "20mb" }), leadRateLimit, async (req, res) => {
   try {
@@ -198,12 +209,21 @@ app.post("/api/leads", express.json({ limit: "20mb" }), leadRateLimit, async (re
     console.log("[leads] saved id", newLead.id, "source", newLead.source);
     res.json(newLead);
   } catch (e) {
-    if (e?.message === "Validation") {
-      console.warn("[leads] 400 validation", req.ip);
-      return res.status(400).json({ error: "Некорректные данные заявки" });
+    const code = e?.message;
+    if (code === "NoName") {
+      return res.status(400).json({ error: "Укажите имя" });
+    }
+    if (code === "NoPhone") {
+      return res.status(400).json({ error: "Укажите номер телефона полностью" });
+    }
+    if (code === "FilesTooLarge" || code === "Validation") {
+      console.warn("[leads] 400 validation", req.ip, code);
+      return res.status(400).json({
+        error: code === "FilesTooLarge" ? "Вложения слишком большие" : "Некорректные данные заявки",
+      });
     }
     console.error("[leads]", e);
-    res.status(500).json({ error: String(e.message) });
+    res.status(500).json({ error: "Не удалось сохранить заявку. Попробуйте позже." });
   }
 });
 
@@ -288,7 +308,101 @@ app.get("/api/documents/:key", async (req, res) => {
   }
 });
 
-app.put("/api/documents/:key", requireAdmin, async (req, res) => {
+/* ---- Analytics (внутренняя статистика просмотров) ---- */
+const ANALYTICS_KEY = "analyticsStats";
+const ANALYTICS_RATE_MS = 30_000;
+const analyticsRate = new Map();
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function emptyAnalytics() {
+  return { byDay: {} };
+}
+
+async function getAnalytics() {
+  const all = await getAllDocuments();
+  const raw = all[ANALYTICS_KEY];
+  if (!raw || typeof raw !== "object") return emptyAnalytics();
+  return raw;
+}
+
+async function recordAnalyticsHit(path) {
+  const p = String(path || "/").slice(0, 200);
+  if (!p.startsWith("/")) return;
+  const day = todayKey();
+  const stats = await getAnalytics();
+  if (!stats.byDay[day]) stats.byDay[day] = { total: 0, paths: {} };
+  const bucket = stats.byDay[day];
+  bucket.total += 1;
+  bucket.paths[p] = (bucket.paths[p] || 0) + 1;
+  const keys = Object.keys(stats.byDay).sort();
+  while (keys.length > 90) {
+    delete stats.byDay[keys.shift()];
+  }
+  await putDocument(ANALYTICS_KEY, stats);
+}
+
+function summarizeAnalytics(stats) {
+  const days = Object.keys(stats.byDay || {}).sort();
+  const today = todayKey();
+  let todayN = 0;
+  let weekN = 0;
+  let monthN = 0;
+  const pathTotals = {};
+  const byDay = [];
+  const now = Date.now();
+  for (const d of days) {
+    const b = stats.byDay[d];
+    const n = b?.total || 0;
+    byDay.push({ date: d, views: n });
+    const age = (now - new Date(d + "T12:00:00").getTime()) / 86400000;
+    if (d === today) todayN = n;
+    if (age <= 7) weekN += n;
+    if (age <= 31) monthN += n;
+    for (const [path, c] of Object.entries(b?.paths || {})) {
+      pathTotals[path] = (pathTotals[path] || 0) + c;
+    }
+  }
+  const topPages = Object.entries(pathTotals)
+    .map(([path, views]) => ({ path, views }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 15);
+  return { today: todayN, week: weekN, month: monthN, topPages, byDay: byDay.slice(-14) };
+}
+
+app.post("/api/analytics/hit", async (req, res) => {
+  try {
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
+    const now = Date.now();
+    let b = analyticsRate.get(ip);
+    if (!b || now > b.reset) {
+      b = { n: 0, reset: now + ANALYTICS_RATE_MS };
+      analyticsRate.set(ip, b);
+    }
+    if (b.n >= 120) return res.status(429).json({ error: "Rate limit" });
+    b.n += 1;
+    const path = String(req.body?.path ?? "/");
+    await recordAnalyticsHit(path);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get("/api/analytics/summary", requireAdmin, async (_req, res) => {
+  try {
+    const stats = await getAnalytics();
+    res.json(summarizeAnalytics(stats));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+async function putDocumentHandler(req, res) {
   try {
     let body = req.body;
     if (req.params.key === "settings" && body && typeof body === "object") {
@@ -316,7 +430,10 @@ app.put("/api/documents/:key", requireAdmin, async (req, res) => {
     console.error(e);
     res.status(500).json({ error: String(e.message) });
   }
-});
+}
+
+app.put("/api/documents/:key", requireAdmin, putDocumentHandler);
+app.post("/api/documents/:key", requireAdmin, putDocumentHandler);
 
 if (USE_FILE) {
   console.log(`A13 API file storage → ${DATA_FILE}`);

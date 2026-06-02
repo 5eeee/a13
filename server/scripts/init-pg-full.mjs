@@ -74,6 +74,15 @@ try {
   for (const key of DOC_KEYS) {
     const v = fromFile[key] !== undefined ? fromFile[key] : defaults[key];
     if (v === undefined) continue;
+    // Заявки только в БД через POST /api/leads — не затираем при деплое из cms.json
+    if (key === "leads") {
+      await client.query(
+        `INSERT INTO cms_documents (key, data, updated_at) VALUES ($1, $2::jsonb, now())
+         ON CONFLICT (key) DO NOTHING`,
+        [key, JSON.stringify(v)]
+      );
+      continue;
+    }
     await client.query(
       `INSERT INTO cms_documents (key, data, updated_at) VALUES ($1, $2::jsonb, now())
        ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,

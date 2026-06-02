@@ -1,43 +1,39 @@
 import { Link } from "react-router";
+import { FadeIn } from "../components/ui/motion";
 import { Phone, Mail, MapPin, Factory, Clock, Send } from "lucide-react";
 import { useState, useRef, type FormEvent } from "react";
-import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
 import { sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
+import { submitLead } from "../lib/submitLead";
 import { useStoreVersion } from "../lib/useStoreVersion";
 import { PhoneInput } from "../components/PhoneInput";
 import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
-
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
+import { ContactsYandexMap } from "../components/ContactsYandexMap";
+import { OFFICE_ADDRESS, PRODUCTION_ADDRESS } from "../lib/contactsMap";
+import { telHref } from "../lib/phone";
 
 export function Contacts() {
   useStoreVersion();
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
+  const [phoneInvalid, setPhoneInvalid] = useState(false);
   const settings = store.getSettings();
 
   const contactInfo = [
-    { icon: Phone, label: "Телефон", value: settings.phone, href: `tel:${settings.phone.replace(/\D/g, "")}` },
+    { icon: Phone, label: "Телефон", value: settings.phone, href: telHref(settings.phone) },
     { icon: Mail, label: "Электронная почта", value: settings.email, href: `mailto:${settings.email}` },
-    { icon: MapPin, label: "Офис", value: settings.address },
-    { icon: Factory, label: "Производство", value: settings.production },
+    { icon: MapPin, label: "Офис", value: settings.address || OFFICE_ADDRESS },
+    { icon: Factory, label: "Производство", value: settings.production || PRODUCTION_ADDRESS },
     { icon: Clock, label: "Режим работы", value: settings.workHours },
   ];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSending(true);
+    setPhoneInvalid(false);
     try {
-      await store.addLead({
+      await submitLead({
         name: form.name,
         phone: form.phone,
         email: form.email || "",
@@ -50,8 +46,10 @@ export function Contacts() {
       void sendEmailConfirmation(form.email || "", form.name);
       toast.success("Сообщение отправлено! Мы свяжемся с вами в ближайшее время.");
       setForm({ name: "", phone: "", email: "", message: "" });
-    } catch {
-      toast.error("Заявка не ушла на сервер. Проверьте API и настройки.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Не удалось отправить заявку";
+      if (msg.toLowerCase().includes("телефон")) setPhoneInvalid(true);
+      toast.error(msg);
     } finally {
       setSending(false);
     }
@@ -113,9 +111,14 @@ export function Contacts() {
                     <label className="text-gray-500 text-xs block mb-1.5">Телефон *</label>
                     <PhoneInput
                       value={form.phone}
-                      onChange={v => setForm(f => ({ ...f, phone: v }))}
+                      invalid={phoneInvalid}
+                      onChange={v => {
+                        setPhoneInvalid(false);
+                        setForm((f) => ({ ...f, phone: v }));
+                      }}
                       required
-                      className="w-full min-h-11 bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all" />
+                      className="w-full min-h-11 bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 transition-all"
+                    />
                   </div>
                 </div>
                 <div>
@@ -138,13 +141,7 @@ export function Contacts() {
         </div>
       </div>
 
-      {/* Map - Офис: Рублевское шоссе д.26 корп.4, Производство: Фрязино, Горького д.10 стр.1 */}
-      <div className="w-full h-[400px] rounded-t-3xl overflow-hidden">
-        <iframe
-          src="https://yandex.ru/map-widget/v1/?ll=37.4167%2C55.7300&z=10&pt=37.3945%2C55.7264%2Cpm2blm~38.0456%2C55.9608%2Cpm2gnm"
-          width="100%" height="100%" style={{ border: 0 }} title="Офис и производство Бюро А13"
-        />
-      </div>
+      <ContactsYandexMap />
     </div>
   );
 }

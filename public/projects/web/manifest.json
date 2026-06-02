@@ -1,0 +1,326 @@
+[
+  {
+    "projectId": 1,
+    "slot": "a",
+    "commons": "International Gymnasium Skolkovo main.jpg",
+    "file": "web/01-a.webp"
+  },
+  {
+    "projectId": 1,
+    "slot": "b",
+    "commons": "Campus-SKOLKOVO.jpg",
+    "file": "web/01-b.webp"
+  },
+  {
+    "projectId": 1,
+    "slot": "c",
+    "commons": "Skolkovo hub.jpg",
+    "file": "web/01-c.webp"
+  },
+  {
+    "projectId": 2,
+    "slot": "a",
+    "commons": "Building of Lukoil headquarters in Moscow 1.jpg",
+    "file": "web/02-a.webp"
+  },
+  {
+    "projectId": 2,
+    "slot": "b",
+    "commons": "Moscow-Lukoil-1607.jpg",
+    "file": "web/02-b.webp"
+  },
+  {
+    "projectId": 2,
+    "slot": "c",
+    "commons": "Moscow, Turgenevskaya Square, building of Lukoil headquarters (42222879835).jpg",
+    "file": "web/02-c.webp"
+  },
+  {
+    "projectId": 3,
+    "slot": "a",
+    "commons": "2021-12 Michurinsky Prospekt 01.jpg",
+    "file": "web/03-a.webp"
+  },
+  {
+    "projectId": 3,
+    "slot": "b",
+    "commons": "Main Building of Moscow State University in winter, Moscow, Russia.jpg",
+    "file": "web/03-b.webp"
+  },
+  {
+    "projectId": 3,
+    "slot": "c",
+    "commons": "Michurinsky Prospect (BCL) - station hall and escalators.jpg",
+    "file": "web/03-c.webp"
+  },
+  {
+    "projectId": 4,
+    "slot": "a",
+    "commons": "KGB-FSB headquarters, Lubyanka Square, Moscow, Russia.jpg",
+    "file": "web/04-a.webp"
+  },
+  {
+    "projectId": 4,
+    "slot": "b",
+    "commons": "Lubyanka Building.jpg",
+    "file": "web/04-b.webp"
+  },
+  {
+    "projectId": 4,
+    "slot": "c",
+    "commons": "Moscow, Lubyanka Square, renovation of the FSB building in 2013.jpg",
+    "file": "web/04-c.webp"
+  },
+  {
+    "projectId": 5,
+    "slot": "a",
+    "commons": "Moscow, Rochdelskaya Street, Lukoil gas station (22146580786).jpg",
+    "file": "web/05-a.webp"
+  },
+  {
+    "projectId": 5,
+    "slot": "b",
+    "commons": "Lukoil-azs.jpg",
+    "file": "web/05-b.webp"
+  },
+  {
+    "projectId": 5,
+    "slot": "c",
+    "commons": "Moscow, Bibirevskaya street - BP petrol station (31532149746).jpg",
+    "file": "web/05-c.webp"
+  },
+  {
+    "projectId": 6,
+    "slot": "a",
+    "commons": "Oktyabrskiy rayon, Samara, Samarskaya oblast', Russia - panoramio (43).jpg",
+    "file": "web/06-a.webp"
+  },
+  {
+    "projectId": 6,
+    "slot": "b",
+    "commons": "Oktyabrskiy rayon, Samara, Samarskaya oblast', Russia - panoramio (50).jpg",
+    "file": "web/06-b.webp"
+  },
+  {
+    "projectId": 6,
+    "slot": "c",
+    "commons": "Фабрика-кухня завода им. Масленникова, Самара , Ново-Садовая улица, 149.jpg",
+    "file": "web/06-c.webp"
+  },
+  {
+    "projectId": 7,
+    "slot": "a",
+    "commons": "Depot Moskva Belorusskaya Station Moscow 2023-06-11 4548.jpg",
+    "file": "web/07-a.webp"
+  },
+  {
+    "projectId": 7,
+    "slot": "b",
+    "commons": "Depot Moskva Belorusskaya Station Moscow 2023-06-11 4552.jpg",
+    "file": "web/07-b.webp"
+  },
+  {
+    "projectId": 7,
+    "slot": "c",
+    "commons": "2021-12-31 - Belorusskaya D1 under reconstruction - Photo 3.jpg",
+    "file": "web/07-c.webp"
+  },
+  {
+    "projectId": 8,
+    "slot": "a",
+    "commons": "2014 Moskva Ritz-Carlton building.JPG",
+    "file": "web/08-a.webp"
+  },
+  {
+    "projectId": 8,
+    "slot": "b",
+    "commons": "Hotel National and Ritz-Carlton in Moscow.jpg",
+    "file": "web/08-b.webp"
+  },
+  {
+    "projectId": 8,
+    "slot": "c",
+    "commons": "Исторический Музей. Вид с крыши отеля Ritz Carlton.jpg",
+    "file": "web/08-c.webp"
+  },
+  {
+    "projectId": 9,
+    "slot": "a",
+    "commons": "Moscow Stoleshnikov Lane 11 2025-09 199.jpg",
+    "file": "web/09-a.webp"
+  },
+  {
+    "projectId": 9,
+    "slot": "b",
+    "commons": "Moscow Stoleshnikov Lane 11 2025-09 198.jpg",
+    "file": "web/09-b.webp"
+  },
+  {
+    "projectId": 9,
+    "slot": "c",
+    "commons": "Moscow Church in Stoleshnikov Lane 03-2016.jpg",
+    "file": "web/09-c.webp"
+  },
+  {
+    "projectId": 10,
+    "slot": "a",
+    "commons": "White Square Office Center Moscow1.jpg",
+    "file": "web/10-a.webp"
+  },
+  {
+    "projectId": 10,
+    "slot": "b",
+    "commons": "White Square Office Center Moscow.jpg",
+    "file": "web/10-b.webp"
+  },
+  {
+    "projectId": 10,
+    "slot": "c",
+    "commons": "Evolution Tower, Moscow City.jpg",
+    "file": "web/10-c.webp"
+  },
+  {
+    "projectId": 11,
+    "slot": "a",
+    "commons": "Moscow, Bolshaya Pionerskaya Street 20, Mar 2025 01.jpg",
+    "file": "web/11-a.webp"
+  },
+  {
+    "projectId": 11,
+    "slot": "b",
+    "commons": "Moscow, Bolshaya Pionerskaya Street 20, Mar 2025 02.jpg",
+    "file": "web/11-b.webp"
+  },
+  {
+    "projectId": 11,
+    "slot": "c",
+    "commons": "Moscow, Bolshaya Pionerskaya 1 July 2022 01.jpg",
+    "file": "web/11-c.webp"
+  },
+  {
+    "projectId": 12,
+    "slot": "a",
+    "commons": "Mytishchi, Troitskaya Street 9 (31603387582).jpg",
+    "file": "web/12-a.webp"
+  },
+  {
+    "projectId": 12,
+    "slot": "b",
+    "commons": "Mytishchi, Blagoveshchenskaya 22 and Troitskaya 11 (31377612400).jpg",
+    "file": "web/12-b.webp"
+  },
+  {
+    "projectId": 12,
+    "slot": "c",
+    "commons": "Mytishchi. Blagoveshchenskaya Street 9 (31603388452).jpg",
+    "file": "web/12-c.webp"
+  },
+  {
+    "projectId": 13,
+    "slot": "a",
+    "commons": "0080 Domodedovo International Airport 16th of August 2016.jpg",
+    "file": "web/13-a.webp"
+  },
+  {
+    "projectId": 13,
+    "slot": "b",
+    "commons": "0083 Domodedovo International Airport 16th of August 2016.jpg",
+    "file": "web/13-b.webp"
+  },
+  {
+    "projectId": 13,
+    "slot": "c",
+    "commons": "0085 Domodedovo International Airport 16th of August 2016.jpg",
+    "file": "web/13-c.webp"
+  },
+  {
+    "projectId": 14,
+    "slot": "a",
+    "commons": "Mytishchi, Borisovka Street (30908562924).jpg",
+    "file": "web/14-a.webp"
+  },
+  {
+    "projectId": 14,
+    "slot": "b",
+    "commons": "Mytishchi, Borisovka Street (30908562064).jpg",
+    "file": "web/14-b.webp"
+  },
+  {
+    "projectId": 14,
+    "slot": "c",
+    "commons": "Mytishchi, Troitskaya Street - Yubileynaya Street block (30908563894).jpg",
+    "file": "web/14-c.webp"
+  },
+  {
+    "projectId": 15,
+    "slot": "a",
+    "commons": "Likhobory metro depot pre-2023.jpg",
+    "file": "web/15-a.webp"
+  },
+  {
+    "projectId": 15,
+    "slot": "b",
+    "commons": "Likhobory (Moscow Metro depot) 20220913 114721.jpg",
+    "file": "web/15-b.webp"
+  },
+  {
+    "projectId": 15,
+    "slot": "c",
+    "commons": "Fili depot 1.jpg",
+    "file": "web/15-c.webp"
+  },
+  {
+    "projectId": 16,
+    "slot": "a",
+    "commons": "Moscow, Tsvetnoy Boulevard 32c1.jpg",
+    "file": "web/16-a.webp"
+  },
+  {
+    "projectId": 16,
+    "slot": "b",
+    "commons": "Moscow Circus on Tsvetnoy Boulevard Dec 2014.JPG",
+    "file": "web/16-b.webp"
+  },
+  {
+    "projectId": 16,
+    "slot": "c",
+    "commons": "Moscow Nikulin Circus on Tsvetnoy Boulevard 2025-09 188.jpg",
+    "file": "web/16-c.webp"
+  },
+  {
+    "projectId": 17,
+    "slot": "a",
+    "commons": "Фабрика-кухня.jpg",
+    "file": "web/17-a.webp"
+  },
+  {
+    "projectId": 17,
+    "slot": "b",
+    "commons": "Фабрика-кухня завода им. Масленникова, Самара , Ново-Садовая улица, 149.jpg",
+    "file": "web/17-b.webp"
+  },
+  {
+    "projectId": 17,
+    "slot": "c",
+    "commons": "Custom cover of communication well near factory-kitchen building in Samara, Russia.jpg",
+    "file": "web/17-c.webp"
+  },
+  {
+    "projectId": 18,
+    "slot": "a",
+    "commons": "Zilart.jpg",
+    "file": "web/18-a.webp"
+  },
+  {
+    "projectId": 18,
+    "slot": "b",
+    "commons": "Moscow, Avtozavodskaya 25c5, Zilart Mar 2026 01.jpg",
+    "file": "web/18-b.webp"
+  },
+  {
+    "projectId": 18,
+    "slot": "c",
+    "commons": "Moscow, Avtozavodskaya 25c5, Zilart Mar 2026 02.jpg",
+    "file": "web/18-c.webp"
+  }
+]

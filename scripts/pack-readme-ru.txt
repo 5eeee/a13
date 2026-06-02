@@ -9,8 +9,8 @@
    Первый раз: npm поставит зависимости (и в server), при необходимости
    создаст server\.env из .env.example и .env.local для API.
 
-3) Сайт:  http://localhost:5173/a13/
-   Админ:  http://localhost:5173/a13/admin
+3) Сайт:  http://localhost:5173/
+   Админ:  http://localhost:5173/admin
    Пароль админки: a13admin
 
 4) Секреты (Telegram, SMTP) задайте в server\.env - см. .env.example

@@ -1,87 +1,6 @@
-/**
- * Раньше: отправка с браузера (токен светился в сети).
- * Сейчас: заявки уходят в API → server/src/leadNotify.js (Telegram + почта + CRM).
- * Функции sendToTelegram / sendToCRM оставлены для отладки, из форм не вызываются.
- */
+/** Подтверждение на email (EmailJS). Заявки → API → server/src/leadNotify.js */
 import { store } from "./store";
 
-export interface TelegramFormPayload {
-  name: string;
-  phone: string;
-  email?: string;
-  message?: string;
-  source: string;
-  region?: string;
-  floors?: string;
-}
-
-export async function sendToTelegram(data: TelegramFormPayload): Promise<boolean> {
-  const settings = store.getSettings();
-  const { telegramBotToken, telegramChatId } = settings;
-
-  if (!telegramBotToken || !telegramChatId) {
-    console.warn("Telegram Bot not configured");
-    return true; // don't block UX if not configured
-  }
-
-  const text = [
-    `📩 *Новая заявка с сайта*`,
-    ``,
-    `👤 Имя: ${escapeMarkdown(data.name)}`,
-    `📞 Телефон: ${escapeMarkdown(data.phone)}`,
-    data.email ? `📧 Email: ${escapeMarkdown(data.email)}` : null,
-    data.message ? `💬 Сообщение: ${escapeMarkdown(data.message)}` : null,
-    data.region ? `🗺 Регион: ${escapeMarkdown(data.region)}` : null,
-    data.floors ? `🏢 Этаж / этажность: ${escapeMarkdown(data.floors)}` : null,
-    ``,
-    `📍 Источник: ${escapeMarkdown(data.source)}`,
-    `🕐 ${new Date().toLocaleString("ru-RU")}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  try {
-    const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: telegramChatId,
-        text,
-        parse_mode: "Markdown",
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-/* ---- CRM Webhook integration ---- */
-export async function sendToCRM(data: TelegramFormPayload): Promise<void> {
-  const { crmWebhookUrl } = store.getSettings();
-  if (!crmWebhookUrl) return;
-  try {
-    await fetch(crmWebhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: data.name,
-        phone: data.phone,
-        email: data.email || "",
-        message: data.message || "",
-        region: data.region || "",
-        floors: data.floors || "",
-        source: data.source,
-        date: new Date().toISOString(),
-      }),
-    });
-  } catch {
-    console.warn("CRM webhook failed");
-  }
-}
-
-/* ---- Email confirmation (via EmailJS or configured service) ---- */
 export async function sendEmailConfirmation(email: string, name: string): Promise<void> {
   const { emailServiceId } = store.getSettings();
   if (!emailServiceId || !email) return;
@@ -99,8 +18,4 @@ export async function sendEmailConfirmation(email: string, name: string): Promis
   } catch {
     console.warn("Email confirmation failed");
   }
-}
-
-function escapeMarkdown(str: string): string {
-  return str.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
 }

@@ -1,17 +1,6 @@
 import { Link } from "react-router";
-import { useRef } from "react";
-import { motion, useInView } from "motion/react";
+import { FadeIn } from "../components/ui/motion";
 import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
-
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
 
 const partners = [
   { name: 'OAO "Metrogiprotrans"', url: "http://www.arhmetro.ru/" },

@@ -6,7 +6,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "migrate:json": "node scripts/migrate-json-to-pg.mjs",
-    "init:pg": "node scripts/init-pg-full.mjs"
+    "init:pg": "node scripts/init-pg-full.mjs",
+    "fix:cms-paths": "node scripts/normalize-cms-paths.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",

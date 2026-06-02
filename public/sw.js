@@ -1,11 +1,10 @@
 /* eslint-disable no-restricted-globals */
 /**
- * База приложения должна совпадать с vite.config base (сейчас /a13/).
- * При смене пути деплоя обновите префикс и имя кэша.
+ * База приложения должна совпадать с vite.config base (сейчас /).
  */
-const BASE = "/a13/";
-const CACHE_STATIC = "a13-static-v2";
-const CACHE_MEDIA = "a13-media-v1";
+const BASE = "/";
+const CACHE_STATIC = "a13-static-v3";
+const CACHE_MEDIA = "a13-media-v3";
 
 const PRECACHE = [BASE, BASE + "index.html", BASE + "logo.svg"];
 
@@ -37,27 +36,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // API и прочее — только сеть
-  if (url.pathname.startsWith("/api")) return;
+  const path = url.pathname;
 
-  if (!url.pathname.startsWith(BASE)) return;
+  if (path.startsWith("/api/")) return;
 
-  // Навигация: сеть, при офлайне — сохранённый index.html
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).catch(async () => {
-        const cache = await caches.open(CACHE_STATIC);
-        return (await cache.match(BASE + "index.html")) || (await cache.match(BASE)) || new Response("Offline", { status: 503 });
-      })
-    );
-    return;
-  }
-
-  // Галерея /projects/*.webp и др. — кэш + фоновое обновление (повторные визиты быстрее)
-  if (
-    url.pathname.startsWith(BASE + "projects/") &&
-    /\.(webp|png|jpe?g|gif|avif|svg)(\?.*)?$/i.test(url.pathname)
-  ) {
+  if (/\.(webp|png|jpg|jpeg|gif|svg|woff2?|ttf|eot)$/i.test(path)) {
     event.respondWith(
       caches.open(CACHE_MEDIA).then(async (cache) => {
         const cached = await cache.match(request);
@@ -73,8 +56,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Статика под /a13/assets/: сначала кэш, параллельно обновление
-  if (url.pathname.startsWith(BASE + "assets/")) {
+  if (path.startsWith("/assets/")) {
     event.respondWith(
       caches.open(CACHE_STATIC).then(async (cache) => {
         const cached = await cache.match(request);
@@ -87,5 +69,12 @@ self.addEventListener("fetch", (event) => {
         return cached || network;
       })
     );
+    return;
   }
+
+  event.respondWith(
+    fetch(request).catch(() =>
+      caches.match(request).then((r) => r || caches.match(BASE + "index.html"))
+    )
+  );
 });

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { sendEmailConfirmation } from "../lib/telegram";
 import { store } from "../lib/store";
+import { submitLead } from "../lib/submitLead";
 import { useStoreVersion } from "../lib/useStoreVersion";
 import { useScrollLock } from "../lib/useScrollLock";
 import { PhoneInput } from "./PhoneInput";
@@ -14,6 +15,7 @@ export function FloatingBar() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
+  const [phoneInvalid, setPhoneInvalid] = useState(false);
   const [done, setDone] = useState(false);
   useScrollLock(open);
 
@@ -35,8 +37,9 @@ export function FloatingBar() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
+    setPhoneInvalid(false);
     try {
-      await store.addLead({
+      await submitLead({
         name: form.name,
         phone: form.phone,
         email: form.email || "",
@@ -50,8 +53,10 @@ export function FloatingBar() {
       setDone(true);
       toast.success("Заявка отправлена!");
       setTimeout(() => { setOpen(false); setDone(false); setForm({ name: "", phone: "", email: "", message: "" }); }, 2000);
-    } catch {
-      toast.error("Заявка не отправлена. Проверьте подключение к серверу.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Не удалось отправить заявку";
+      if (msg.toLowerCase().includes("телефон")) setPhoneInvalid(true);
+      toast.error(msg);
     } finally {
       setSending(false);
     }
@@ -137,8 +142,12 @@ export function FloatingBar() {
                     />
                     <PhoneInput
                       required
+                      invalid={phoneInvalid}
                       value={form.phone}
-                      onChange={v => setForm({ ...form, phone: v })}
+                      onChange={(v) => {
+                        setPhoneInvalid(false);
+                        setForm({ ...form, phone: v });
+                      }}
                       className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-base"
                     />
                     <div className="relative">

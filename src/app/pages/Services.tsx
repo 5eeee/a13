@@ -1,38 +1,12 @@
 import { Link } from "react-router";
+import { FadeIn, ScaleIn } from "../components/ui/motion";
 import { ArrowRight, Building2, DoorOpen, Sun, Grip, ShieldCheck, Ruler, CheckCircle } from "lucide-react";
-import { useRef } from "react";
-import { motion, useInView } from "motion/react";
 import { store } from "../lib/store";
 import { useStoreVersion } from "../lib/useStoreVersion";
 import { resolveServiceExamples } from "../lib/serviceExamples";
 import { SITE_SERVICE_DEFS } from "../lib/servicePage";
 import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
 
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
-function ScaleIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={inView ? { opacity: 1, scale: 1 } : {}}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-      style={{ transformOrigin: "center top" }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 const services = [
   {

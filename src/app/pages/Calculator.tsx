@@ -1,23 +1,13 @@
 import { Link } from "react-router";
+import { FadeIn } from "../components/ui/motion";
 import { useState, useMemo, useRef } from "react";
 import { Calculator as CalcIcon, CheckCircle2, Paperclip, Info } from "lucide-react";
-import { motion, useInView } from "motion/react";
 import { toast, Toaster } from "sonner";
 import { sendEmailConfirmation } from "../lib/telegram";
-import { store } from "../lib/store";
+import { submitLead } from "../lib/submitLead";
 import { useStoreVersion } from "../lib/useStoreVersion";
 import { PhoneInput } from "../components/PhoneInput";
 import { PageBreadcrumbs } from "../components/PageBreadcrumbs";
-
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
 
 const SYSTEMS = [
   { label: "Schuco (Германия)", factor: 1.35 },
@@ -216,6 +206,7 @@ export function Calculator() {
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [phoneInvalid, setPhoneInvalid] = useState(false);
 
   const clampNum = (val: string, min: number, max: number) => {
     if (val === "" || val === "-") return val;
@@ -252,6 +243,7 @@ export function Calculator() {
     e.preventDefault();
     if (!result) return;
     setSending(true);
+    setPhoneInvalid(false);
 
     const calcText = [
       `Тип: ${CONSTRUCT_TYPES[constructIdx].label}`,
@@ -267,33 +259,37 @@ export function Calculator() {
       contactForm.floors ? `Этажность / этаж: ${contactForm.floors}` : "",
     ].filter(Boolean).join("\n");
 
-    const fileNames = files.map(f => f.name);
-    const fullMessage = [calcText, contactForm.message ? `\nОписание: ${contactForm.message}` : "", fileNames.length ? `\nФайлы: ${fileNames.join(", ")}` : ""].filter(Boolean).join("");
-
-    const fileDataUrls: string[] = [];
-    for (const f of files) {
-      const dataUrl = await new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); });
-      fileDataUrls.push(dataUrl);
-    }
+    const fileNames = files.map((f) => f.name);
+    const fullMessage = [
+      calcText,
+      contactForm.message ? `\nОписание: ${contactForm.message}` : "",
+      fileNames.length ? `\nФайлы: ${fileNames.join(", ")}` : "",
+    ]
+      .filter(Boolean)
+      .join("");
 
     try {
-      await store.addLead({
+      await submitLead({
         name: contactForm.name,
         phone: contactForm.phone,
         email: contactForm.email,
         message: fullMessage,
         calculation: calcText,
-        files: fileDataUrls,
+        files: [],
+        attachFiles: files,
         date: new Date().toISOString(),
         source: "Калькулятор",
-        region: contactForm.region || undefined,
-        floors: contactForm.floors || undefined,
+        region: contactForm.region,
+        floors: contactForm.floors,
       });
       void sendEmailConfirmation(contactForm.email, contactForm.name);
       setSubmitted(true);
+      setFiles([]);
       toast.success("Заявка отправлена!");
-    } catch {
-      toast.error("Заявка не ушла на сервер. Уменьшите вложения или проверьте API.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Не удалось отправить заявку";
+      if (msg.toLowerCase().includes("телефон") || msg.toLowerCase().includes("имя")) setPhoneInvalid(true);
+      toast.error(msg);
     } finally {
       setSending(false);
     }
@@ -462,8 +458,12 @@ export function Calculator() {
                     <input type="text" required placeholder="Ваше имя" value={contactForm.name} onChange={e => setContactForm({ ...contactForm, name: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />
                     <PhoneInput
                     required
+                    invalid={phoneInvalid}
                     value={contactForm.phone}
-                    onChange={v => setContactForm({ ...contactForm, phone: v })}
+                    onChange={v => {
+                      setPhoneInvalid(false);
+                      setContactForm({ ...contactForm, phone: v });
+                    }}
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all"
                   />
                     <input type="text" placeholder="Регион / город" value={contactForm.region} onChange={e => setContactForm({ ...contactForm, region: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 text-sm transition-all" />

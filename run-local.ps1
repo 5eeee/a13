@@ -88,8 +88,8 @@ Start-Sleep -Seconds 2
 
 Write-Host "Starting Vite..." -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  Site:  http://localhost:5173/a13/" -ForegroundColor Green
-Write-Host "  Admin: http://localhost:5173/a13/admin" -ForegroundColor Green
+Write-Host "  Site:  http://localhost:5173/" -ForegroundColor Green
+Write-Host "  Admin: http://localhost:5173/admin" -ForegroundColor Green
 Write-Host "  API:   http://localhost:3001/api/health" -ForegroundColor Green
 Write-Host ""
 Write-Host "(Close the API window when done.)" -ForegroundColor DarkGray

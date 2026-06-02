@@ -4,8 +4,10 @@ import {
   FolderOpen, Shield, Eye, EyeOff, X, Inbox, Star, MessageSquare, Building2, Wrench,
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link2, Highlighter, Heading1, Heading2, Undo2, Redo2,
-  ChevronDown, Scissors, BookOpen, KeyRound, Info, ExternalLink,
+  ChevronDown, Scissors, BookOpen, KeyRound, Info, ExternalLink, LineChart, RefreshCw,
 } from "lucide-react";
+import { AdminAnalyticsTab } from "../components/admin/AdminAnalyticsTab";
+import { AdminMarketingSettings } from "../components/admin/AdminMarketingSettings";
 import {
   DndContext,
   closestCenter,
@@ -23,7 +25,10 @@ import { sortedProjects, renumberSortOrders } from "../lib/projectMedia";
 import { SITE_SERVICE_DEFS } from "../lib/servicePage";
 import type { ServiceExamplesMap } from "../lib/serviceExamples";
 import { ImageCropModal } from "../components/ImageCropModal";
+import { AdminImageDropZone } from "../components/admin/AdminImageDropZone";
 import { AdminHelp } from "../components/AdminHelp";
+import { AdminLeadsPanel } from "../components/admin/AdminLeadsPanel";
+import { countNewLeads, normalizeLeads } from "../lib/leadsAdmin";
 import { PhoneInput } from "../components/PhoneInput";
 import { SortableAdminRow } from "../components/SortableAdminRow";
 import { AdminExpandPanel } from "../components/AdminExpandPanel";
@@ -41,7 +46,7 @@ import TiptapImage from "@tiptap/extension-image";
 
 const ADMIN_PASS = "a13admin";
 const ADMIN_ONBOARDING_KEY = "a13_admin_welcome_dismissed";
-type Tab = "projects" | "services" | "blog" | "reviews" | "leads" | "stats" | "partners" | "about" | "settings" | "help";
+type Tab = "projects" | "services" | "blog" | "reviews" | "leads" | "stats" | "partners" | "about" | "settings" | "analytics" | "help";
 
 /* ---- Rich Text Editor Component ---- */
 function RichEditor({
@@ -129,8 +134,25 @@ export function Admin() {
 
   const [tab, setTab] = useState<Tab>("projects");
 
+  const persistLeads = async (next: Lead[]) => {
+    const normalized = normalizeLeads(next);
+    await store.setLeads(normalized);
+    setLeads(normalized);
+  };
+
+  const refreshLeadsFromServer = async () => {
+    await hydrateStore();
+    const raw = store.getLeads();
+    const normalized = normalizeLeads(raw);
+    const needsPersist =
+      normalized.length !== raw.length ||
+      normalized.some((l, i) => l.ref !== raw[i]?.ref || l.status !== raw[i]?.status);
+    if (needsPersist) await store.setLeads(normalized);
+    setLeads(normalized);
+  };
+
   const switchTab = (t: Tab) => {
-    if (t === "leads") setLeads(store.getLeads());
+    if (t === "leads") void refreshLeadsFromServer();
     setTab(t);
   };
   const [projects, setProjects] = useState<Project[]>([]);
@@ -181,7 +203,7 @@ export function Admin() {
       sortOrder: p.sortOrder ?? p.id * 10,
     })));
     setBlog(store.getBlog().map(b => ({ ...b, images: b.images || [], content: b.content || "", published: b.published !== false })));
-    setLeads(store.getLeads());
+    setLeads(normalizeLeads(store.getLeads()));
     setReviews(store.getReviews());
     setPartners(store.getPartners());
     setStats(store.getStats());
@@ -283,18 +305,14 @@ export function Admin() {
       toast.error(e instanceof Error ? e.message : "Ошибка сохранения");
     }
   };
-  const addAboutProductionImage = async (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (!f.type.startsWith("image/")) {
-      toast.error("Нужен файл изображения");
-      e.target.value = "";
-      return;
+  const addAboutProductionImages = async (files: File[]) => {
+    const urls: string[] = [];
+    for (const f of files) {
+      urls.push(await encodeRasterImageForStorage(f));
     }
-    e.target.value = "";
-    const url = await encodeRasterImageForStorage(f);
-    setAboutPage((p) => ({ ...p, productionImages: [...p.productionImages, url] }));
-    toast.success("Фото добавлено (сжато для сайта)");
+    if (!urls.length) return;
+    setAboutPage((p) => ({ ...p, productionImages: [...p.productionImages, ...urls] }));
+    toast.success(urls.length === 1 ? "Фото добавлено" : `Добавлено фото: ${urls.length}`);
   };
   const removeAboutProductionImage = (index: number) => {
     setAboutPage((p) => ({ ...p, productionImages: p.productionImages.filter((_, i) => i !== index) }));
@@ -457,8 +475,8 @@ export function Admin() {
   };
 
   /* Multi-image upload for gallery */
-  const handleMultiImageUpload = async (projectId: number, files: FileList) => {
-    const list = Array.from(files);
+  const handleMultiImageUpload = async (projectId: number, files: File[]) => {
+    const list = files;
     const urls: string[] = [];
     for (const file of list) {
       urls.push(await encodeRasterImageForStorage(file));
@@ -488,8 +506,8 @@ export function Admin() {
     toast.success("Обложка новости обновлена");
   };
 
-  const handleBlogMultiImageUpload = async (blogId: number, files: FileList) => {
-    const list = Array.from(files);
+  const handleBlogMultiImageUpload = async (blogId: number, files: File[]) => {
+    const list = files;
     const urls: string[] = [];
     for (const file of list) {
       urls.push(await encodeRasterImageForStorage(file));
@@ -600,11 +618,13 @@ export function Admin() {
     { key: "partners", label: "Партнёры", icon: Building2 },
     { key: "about", label: "О компании", icon: Info },
     { key: "settings", label: "Настройки", icon: Settings },
+    { key: "analytics", label: "Статистика", icon: LineChart },
     { key: "help", label: "Справка", icon: BookOpen },
   ];
 
   const currentTabLabel = tabs.find((t) => t.key === tab)?.label ?? tab;
-  const canQuickSave = tab !== "leads" && tab !== "help";
+  const canQuickSave = tab !== "leads" && tab !== "help" && tab !== "analytics";
+  const newLeadsCount = countNewLeads(leads, "all");
 
   const dismissWelcome = (openHelp: boolean) => {
     try {
@@ -702,7 +722,14 @@ export function Admin() {
                 }`}
               >
                 <t.icon size={18} className="shrink-0 opacity-90" />
-                <span className="leading-tight">{t.label}</span>
+                <span className="leading-tight flex items-center">
+                  {t.label}
+                  {t.key === "leads" && newLeadsCount > 0 && (
+                    <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                      {newLeadsCount > 99 ? "99+" : newLeadsCount}
+                    </span>
+                  )}
+                </span>
               </button>
             ))}
           </aside>
@@ -719,6 +746,7 @@ export function Admin() {
                   }`}
                 >
                   {t.label}
+                  {t.key === "leads" && newLeadsCount > 0 ? ` (${newLeadsCount})` : ""}
                 </button>
               ))}
             </nav>
@@ -726,7 +754,7 @@ export function Admin() {
             <div ref={mainScrollRef} className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
             <div
               className={`mx-auto w-full px-4 py-6 sm:px-6 pb-28 sm:pb-32 ${
-                tab === "about" ? "max-w-7xl" : "max-w-4xl"
+                tab === "about" || tab === "leads" ? "max-w-7xl" : "max-w-4xl"
               }`}
             >
         {/* PROJECTS */}
@@ -824,12 +852,17 @@ export function Admin() {
                       <option value="yes">Всегда (с заглушкой)</option>
                       <option value="no">Не показывать</option>
                     </select>
-                    <p className="text-gray-400 text-[11px] mt-1">Порядок карточек на сайте - перетаскиванием строки за ручку слева (внутренний номер обновляется сам).</p>
                   </div>
 
                   {/* === ГЛАВНАЯ: single main photo + short text === */}
                   <div className="mb-1 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
                     <h4 className="text-blue-700 text-xs font-semibold uppercase tracking-wider mb-3">Обложка (главная + карточка)</h4>
+                    <AdminImageDropZone
+                      className="mb-3"
+                      onFiles={async (files) => {
+                        if (files[0]) await handleMainImageUpload(p.id, files[0]);
+                      }}
+                    />
                     <div className="flex flex-col sm:flex-row items-start gap-4">
                       <div className="shrink-0">
                         {p.image ? (
@@ -838,18 +871,24 @@ export function Admin() {
                             <button type="button" onClick={() => updateProject(p.id, "image", "")} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
                           </div>
                         ) : (
-                          <div className="w-32 h-24 border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center text-blue-400 bg-white text-center px-1">
-                            <span className="text-[10px] leading-tight">Нет фото - на сайте будет нейтральная заглушка</span>
+                          <div className="w-32 h-24 border border-blue-200 rounded-xl flex flex-col items-center justify-center text-blue-400 bg-white text-center px-1">
+                            <span className="text-[10px] leading-tight">Нет фото</span>
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 space-y-2 text-xs text-gray-500">
-                        <p>Можно оставить без файла: проект опубликуется с минималистичной заглушкой. Для слайдера см. настройку выше.</p>
+                      <div className="flex-1">
                         <div className="flex flex-wrap gap-2">
-                          <label className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-700 cursor-pointer hover:bg-blue-50 transition-colors">
-                            <Image size={12} /> Загрузить
-                            <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleMainImageUpload(p.id, e.target.files[0]); }} />
-                          </label>
+                          <AdminImageDropZone
+                            variant="inline"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors !min-h-0 !p-0 !border-0 !ring-0"
+                            onFiles={async (files) => {
+                              if (files[0]) await handleMainImageUpload(p.id, files[0]);
+                            }}
+                          >
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 pointer-events-none">
+                              <Image size={12} /> Загрузить
+                            </span>
+                          </AdminImageDropZone>
                           {p.image && (
                             <button
                               type="button"
@@ -899,14 +938,21 @@ export function Admin() {
                           </div>
                         </div>
                       ))}
-                      <label className="w-28 h-22 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer text-gray-400 hover:text-blue-700 hover:border-blue-300 transition-colors">
+                      <AdminImageDropZone
+                        variant="tile"
+                        multiple
+                        onFiles={(files) => handleMultiImageUpload(p.id, files)}
+                      >
                         <Plus size={18} />
-                        <span className="text-[10px] mt-0.5">Добавить</span>
-                        <input type="file" accept="image/*" multiple className="hidden" onChange={e => { if (e.target.files?.length) handleMultiImageUpload(p.id, e.target.files); }} />
-                      </label>
+                        <span className="text-[10px] mt-0.5 pointer-events-none">Добавить</span>
+                      </AdminImageDropZone>
                     </div>
-                    <p className="text-gray-400 text-[11px] mb-3">Эти фото отображаются на странице проекта. Фотографии не обрезаются.</p>
-
+                    <AdminImageDropZone
+                      className="mb-3"
+                      variant="panel"
+                      multiple
+                      onFiles={(files) => handleMultiImageUpload(p.id, files)}
+                    />
                     <label className={lbl}>Полное описание проекта</label>
                     <RichEditor content={p.content} onChange={html => updateProject(p.id, "content", html)} />
                   </div>
@@ -928,8 +974,7 @@ export function Admin() {
               <h2 className="text-xl font-bold text-gray-900">Услуги: примеры работ</h2>
               <button type="button" onClick={() => { void saveServiceExamplesDoc(); }} className="flex items-center gap-1.5 bg-blue-700 text-white px-4 py-2 rounded-full text-xs hover:bg-blue-800 transition-colors"><Save size={14} /> Сохранить</button>
             </div>
-            <p className="text-sm text-gray-500 mb-6">Те же направления, что на странице «Услуги» сайта. Укажите проекты-образцы для каждой карточки. Показ на сайте - только у опубликованных проектов, до 6 ссылок. Пустой список: автоподбор по «Категория» (как раньше) или, для проектирования, без примеров.</p>
-            <div className="space-y-5">
+            <div className="space-y-5 mt-2">
               {SITE_SERVICE_DEFS.map((def) => {
                 const ids = serviceExamples[def.id] ?? [];
                 return (
@@ -937,11 +982,6 @@ export function Admin() {
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
                       <div>
                         <h3 className="font-semibold text-gray-900">{def.title}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {def.categories.length > 0
-                            ? `Если не выбрать проекты - на сайте подставятся по категориям: ${def.categories.join(", ")}.`
-                            : "Без списка категорий - примеры только из списка ниже (или пусто)."}
-                        </p>
                       </div>
                       <button
                         type="button"
@@ -1099,6 +1139,12 @@ export function Admin() {
 
                   <div className="mb-1 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
                     <h4 className="text-blue-700 text-xs font-semibold uppercase tracking-wider mb-3">Главная (превью)</h4>
+                    <AdminImageDropZone
+                      className="mb-3"
+                      onFiles={async (files) => {
+                        if (files[0]) await handleBlogMainImageUpload(b.id, files[0]);
+                      }}
+                    />
                     <div className="flex items-start gap-4">
                       <div className="shrink-0">
                         {b.image ? (
@@ -1107,15 +1153,19 @@ export function Admin() {
                             <button type="button" onClick={() => updateBlogPost(b.id, "image", "")} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
                           </div>
                         ) : (
-                          <label className="w-32 h-24 border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center cursor-pointer text-blue-400 hover:text-blue-700 hover:border-blue-500 transition-colors bg-white">
+                          <AdminImageDropZone
+                            className="w-32 h-24 !min-h-0 shrink-0"
+                            variant="tile"
+                            onFiles={async (files) => {
+                              if (files[0]) await handleBlogMainImageUpload(b.id, files[0]);
+                            }}
+                          >
                             <Image size={20} />
-                            <span className="text-[10px] mt-1">1 фото</span>
-                            <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleBlogMainImageUpload(b.id, e.target.files[0]); }} />
-                          </label>
+                            <span className="text-[10px] mt-1 pointer-events-none">Перетащите</span>
+                          </AdminImageDropZone>
                         )}
                       </div>
-                      <div className="flex-1 text-xs text-gray-500">
-                        <p>Это фото отображается в карточке новости на странице новостей. Фото не будет обрезаться.</p>
+                      <div className="flex-1">
                         {b.image && (
                           <label className="inline-flex items-center gap-1 mt-2 text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">
                             <Image size={12} /> Заменить
@@ -1140,14 +1190,21 @@ export function Admin() {
                           </div>
                         </div>
                       ))}
-                      <label className="w-28 h-22 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer text-gray-400 hover:text-blue-700 hover:border-blue-300 transition-colors">
+                      <AdminImageDropZone
+                        variant="tile"
+                        multiple
+                        onFiles={(files) => handleBlogMultiImageUpload(b.id, files)}
+                      >
                         <Plus size={18} />
-                        <span className="text-[10px] mt-0.5">Добавить</span>
-                        <input type="file" accept="image/*" multiple className="hidden" onChange={e => { if (e.target.files?.length) handleBlogMultiImageUpload(b.id, e.target.files); }} />
-                      </label>
+                        <span className="text-[10px] mt-0.5 pointer-events-none">Добавить</span>
+                      </AdminImageDropZone>
                     </div>
-                    <p className="text-gray-400 text-[11px] mb-3">Эти фото отображаются на странице новости. Фотографии не обрезаются.</p>
-
+                    <AdminImageDropZone
+                      className="mb-3"
+                      variant="panel"
+                      multiple
+                      onFiles={(files) => handleBlogMultiImageUpload(b.id, files)}
+                    />
                     <label className={lbl}>Полное описание</label>
                     <RichEditor content={b.content} onChange={html => updateBlogPost(b.id, "content", html)} />
                   </div>
@@ -1262,47 +1319,11 @@ export function Admin() {
         )}
         {/* LEADS */}
         {tab === "leads" && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Заявки ({leads.length})</h2>
-              {leads.length > 0 && (
-                <button type="button" onClick={() => { void (async () => { try { await store.setLeads([]); setLeads([]); toast.success("Заявки очищены"); } catch (e) { toast.error(e instanceof Error ? e.message : "Ошибка"); } })(); }} className="text-red-400 hover:text-red-600 text-xs transition-colors">Очистить все</button>
-              )}
-            </div>
-            {leads.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
-                <Inbox size={40} className="text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">Заявок пока нет</p>
-                <p className="text-gray-300 text-xs mt-1">Заявки поступают из калькулятора и других форм</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {[...leads].reverse().map(lead => (
-                  <div key={lead.id} className="bg-white border border-gray-200 rounded-2xl p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-gray-900 font-medium text-sm">{lead.name}</h3>
-                        <p className="text-gray-400 text-xs">{new Date(lead.date).toLocaleString("ru-RU")}</p>
-                      </div>
-                      <span className="text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded-full">{lead.source}</span>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-2 text-sm mb-3">
-                      <div><span className="text-gray-400 text-xs">Телефон:</span> <span className="text-gray-900">{lead.phone}</span></div>
-                      {lead.email && <div><span className="text-gray-400 text-xs">Email:</span> <span className="text-gray-900">{lead.email}</span></div>}
-                      {lead.region && <div><span className="text-gray-400 text-xs">Регион:</span> <span className="text-gray-900">{lead.region}</span></div>}
-                      {lead.floors && <div><span className="text-gray-400 text-xs">Этажность:</span> <span className="text-gray-900">{lead.floors}</span></div>}
-                    </div>
-                    {lead.message && (
-                      <div className="text-sm text-gray-600 mb-2 whitespace-pre-line">{lead.message}</div>
-                    )}
-                    {lead.calculation && (
-                      <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 whitespace-pre-line">{lead.calculation}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <AdminLeadsPanel
+            leads={leads}
+            onLeadsChange={persistLeads}
+            onRefresh={refreshLeadsFromServer}
+          />
         )}
         {/* STATS */}
         {tab === "stats" && (
@@ -1430,7 +1451,6 @@ export function Admin() {
                           placeholder="https://example.com"
                           className={inp}
                         />
-                        <p className="text-gray-400 text-[11px] mt-1">Если пусто - карточка в ленте не кликабельна</p>
                       </div>
                     </div>
                   </div>
@@ -1537,12 +1557,21 @@ export function Admin() {
                       </button>
                     </div>
                   ))}
-                  <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 text-xs cursor-pointer hover:border-blue-400 hover:text-blue-600">
-                    + фото
-                    <input type="file" accept="image/*" className="hidden" onChange={addAboutProductionImage} />
-                  </label>
+                  <AdminImageDropZone
+                    variant="tile"
+                    multiple
+                    className="w-24 h-24 !min-h-0 rounded-lg"
+                    onFiles={addAboutProductionImages}
+                  >
+                    <span className="text-xs pointer-events-none">+ фото</span>
+                  </AdminImageDropZone>
                 </div>
-                <p className="text-gray-400 text-[11px]">Data URL, как в проектах; много крупных фото раздувают JSON.</p>
+                <AdminImageDropZone
+                  className="mb-3"
+                  variant="panel"
+                  multiple
+                  onFiles={addAboutProductionImages}
+                />
               </div>
               <div className="bg-white border border-gray-200 rounded-2xl p-5">
                 <h3 className="text-gray-900 font-semibold text-sm mb-3">Синий блок внизу</h3>
@@ -1585,7 +1614,6 @@ export function Admin() {
                 onClick={() => setAboutBlock(null)}
                 role="presentation"
               >
-                <p className="text-xs text-slate-500 mb-2">Клик вне рамок секций снимает выбор.</p>
                 <div className="border border-slate-200/80 bg-white overflow-hidden rounded-xl shadow-sm">
                   <AboutPageSections
                     mode="edit"
@@ -1621,7 +1649,6 @@ export function Admin() {
                         onChange={(v) => setSettings({ ...settings, phone: v })}
                         className={inp}
                       />
-                      <p className="text-gray-400 text-[11px] mt-1">Формат: +7 и скобки подставляются при вводе</p>
                     </div>
                   </div>
                   <div>
@@ -1644,10 +1671,6 @@ export function Admin() {
                 <section className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col h-full min-h-0">
                   <h3 className="text-gray-900 font-semibold text-sm mb-4">Уведомления о заявках (сервер)</h3>
                   <div className="flex-1 min-h-0 flex flex-col gap-2 text-sm text-gray-600">
-                    <p>
-                      Telegram-бот и SMTP не хранятся в браузере. Задайте на машине с API (файл{" "}
-                      <code className="text-xs bg-gray-100 px-1 rounded">server/.env</code>):
-                    </p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li>
                         <code className="text-xs">TELEGRAM_BOT_TOKEN</code>, <code className="text-xs">TELEGRAM_CHAT_ID</code> — чат с заявками
@@ -1661,15 +1684,10 @@ export function Admin() {
                       </li>
                     </ul>
                   </div>
-                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-4 shrink-0">
-                    Старые токены в JSON в БД не отдаются в публичный API; дублируйте в .env на сервере.
-                  </p>
                 </section>
                 <section className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col h-full min-h-0">
-                  <h3 className="text-gray-900 font-semibold text-sm mb-2">Двухфакторная аутентификация (2FA)</h3>
-                  <p className="text-gray-600 text-xs mb-4 leading-relaxed flex-1 min-h-0">
-                    Код Google Authenticator / Яндекс Ключ. Вход в админку: пароль, затем 6 цифр. Настройка и проверка — через API; без сервера 2FA не заработает.
-                  </p>
+                  <h3 className="text-gray-900 font-semibold text-sm mb-4">Двухфакторная аутентификация (2FA)</h3>
+                  <div className="flex-1 min-h-0" />
                   <div className="mt-auto shrink-0 space-y-3">
                     {settings.totpEnabled && !totpEnroll ? (
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -1713,9 +1731,6 @@ export function Admin() {
                       </button>
                     ) : (
                       <div className="space-y-3">
-                        <p className="text-xs text-gray-600">
-                          Добавьте запись в приложении, затем введите текущий 6-значный код и нажмите «Активировать» (сохранение в БД сразу).
-                        </p>
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                           <img
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(totpEnroll.keyuri)}`}
@@ -1725,7 +1740,7 @@ export function Admin() {
                             className="shrink-0 rounded-xl border border-gray-200 bg-white"
                           />
                           <div className="min-w-0">
-                            <p className="text-xs text-gray-500 mb-1">Секрет (вручную, если нет сканера):</p>
+                            <p className="text-xs text-gray-500 mb-1">Секрет:</p>
                             <code className="block break-all rounded-lg border border-gray-200 bg-gray-50 p-2 text-[11px] text-gray-800">{totpEnroll.secret}</code>
                           </div>
                         </div>
@@ -1784,13 +1799,12 @@ export function Admin() {
                   </div>
                 </section>
               </div>
-              <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                <h3 className="text-gray-900 font-semibold text-sm mb-4">Аналитика</h3>
-                <div><label className={lbl}>ID Яндекс.Метрики</label><input type="text" value={settings.yandexMetrikaId} onChange={e => setSettings({ ...settings, yandexMetrikaId: e.target.value })} placeholder="12345678" className={inp + " max-w-xs"} /></div>
-              </div>
+              <AdminMarketingSettings settings={settings} setSettings={setSettings} />
+
             </div>
           </div>
         )}
+        {tab === "analytics" && <AdminAnalyticsTab />}
         {tab === "help" && <AdminHelp />}
       </div>
             </div>
@@ -1824,7 +1838,6 @@ export function Admin() {
           </button>
         </div>
       </div>
-      <p className="text-center text-slate-400 text-xs py-4 pb-8 md:pl-56">Контент в PostgreSQL; вход в админку - только в этом браузере (флаг + 2FA при включении)</p>
     </div>
   );
 }
